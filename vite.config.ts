@@ -10,7 +10,7 @@ if (mode === "lib") {
   config = defineConfig({
     build: {
       lib: {
-        entry: "src/index.ts",
+        entry: "lib/index.ts",
         formats: ["es"],
         fileName: "loudness.worklet",
       },
