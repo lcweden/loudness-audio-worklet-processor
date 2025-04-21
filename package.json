@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev:playground": "VITE_MODE=playground vite",
+    "dev:demo": "VITE_MODE=demo vite",
+    "build:lib": "tsc -b && VITE_MODE=lib vite build",
+    "build:demo": "tsc -b && VITE_MODE=playground vite build",
     "preview": "vite preview",
     "format": "prettier --write ."
   },
@@ -15,6 +17,7 @@
     "tailwindcss": "^4.1.4"
   },
   "devDependencies": {
+    "@types/node": "^22.14.1",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "~5.7.2",
