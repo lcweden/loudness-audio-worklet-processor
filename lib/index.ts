@@ -18,7 +18,13 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
   static channelWeights = [1.0, 1.0, 1.0, 0.0, 1.41, 1.41, 1.41, 1.41];
 
-  #sampleRate: number;
+  #updateMode: 'time' | 'frame' = 'frame';
+
+  #updateInterval: number = 2560;
+
+  #lastTime: number = 0;
+
+  #lastFrame: number = 0;
 
   #kWeightingFilterStates: { x: Float32Array; y: Float32Array }[][][] = [];
 
@@ -34,12 +40,20 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     truePeak: number;
   }[] = [];
 
-  #lastLoudnessDataSnapshot: string = '';
-
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
 
-    this.#sampleRate = sampleRate;
+    if (sampleRate !== 48000) {
+      console.warn('The sample rate is not 48kHz, which may lead to inaccurate measurements.');
+    }
+
+    if (options.processorOptions && options.processorOptions.updateMode) {
+      this.#updateMode = options.processorOptions.updateMode;
+    }
+
+    if (options.processorOptions && options.processorOptions.updateInterval) {
+      this.#updateInterval = options.processorOptions.updateInterval;
+    }
 
     this.#loudnessBuffers = Array.from(
       { length: options.numberOfInputs },
@@ -68,10 +82,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       loudnessRange: -Infinity,
       truePeak: -Infinity,
     }));
-
-    if (this.#sampleRate !== 48000) {
-      console.warn('The sample rate is not 48kHz, which may lead to inaccurate measurements.');
-    }
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
@@ -211,7 +221,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       const shortTermLoudnessHistory = this.#loudnessHistories[i].get('short-term');
 
       if (integratedLoudnessBuffers && integratedLoudnessHistory) {
-        const blockSize = Math.floor(this.#sampleRate * 0.4);
+        const blockSize = Math.floor(sampleRate * 0.4);
         const hopSize = Math.floor(blockSize * (1 - 0.75));
 
         while (integratedLoudnessBuffers.length >= blockSize) {
@@ -225,8 +235,8 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
 
       if (momentaryLoudnessBuffers && momentaryLoudnessHistory) {
-        const windowSize = Math.floor(this.#sampleRate * 0.4);
-        const updateRate = Math.floor(this.#sampleRate * 0.1);
+        const windowSize = Math.floor(sampleRate * 0.4);
+        const updateRate = Math.floor(sampleRate * 0.1);
 
         while (momentaryLoudnessBuffers.length > windowSize) {
           momentaryLoudnessBuffers.shift();
@@ -243,8 +253,8 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
 
       if (shortTermLoudnessBuffers && shortTermLoudnessHistory) {
-        const windowSize = Math.floor(this.#sampleRate * 3.0);
-        const updateRate = Math.floor(this.#sampleRate * 0.1);
+        const windowSize = Math.floor(sampleRate * 3.0);
+        const updateRate = Math.floor(sampleRate * 0.1);
 
         while (shortTermLoudnessBuffers.length > windowSize) {
           shortTermLoudnessBuffers.shift();
@@ -355,12 +365,25 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       this.#loudnessData[i].truePeak = truePeak;
     }
 
-    const currentloudnessDataSnapshot = JSON.stringify(this.#loudnessData);
-    const lastLoudnessDataSnapshot = this.#lastLoudnessDataSnapshot;
+    /**
+     * Output
+     */
 
-    if (currentloudnessDataSnapshot !== lastLoudnessDataSnapshot) {
-      this.#lastLoudnessDataSnapshot = currentloudnessDataSnapshot;
-      this.port.postMessage(this.#loudnessData);
+    switch (this.#updateMode) {
+      case 'frame':
+        if (currentFrame - this.#lastFrame >= this.#updateInterval) {
+          this.port.postMessage(this.#loudnessData);
+          this.#lastFrame = currentFrame;
+        }
+        break;
+      case 'time':
+        if (currentTime - this.#lastTime >= this.#updateInterval) {
+          this.port.postMessage(this.#loudnessData);
+          this.#lastTime = currentTime;
+        }
+        break;
+      default:
+        break;
     }
 
     return true;
