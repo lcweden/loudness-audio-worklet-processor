@@ -82,6 +82,27 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       loudnessRange: -Infinity,
       truePeak: -Infinity,
     }));
+
+    this.port.onmessage = (event: MessageEvent) => {
+      if (typeof event.data !== 'string') {
+        return;
+      }
+
+      switch (event.data) {
+        case 'reset':
+          for (let i = 0; i < options.numberOfInputs; i++) {
+            this.#loudnessBuffers[i].set('integrated', []);
+            this.#loudnessBuffers[i].set('momentary', []);
+            this.#loudnessBuffers[i].set('short-term', []);
+            this.#loudnessHistories[i].set('integrated', []);
+            this.#loudnessHistories[i].set('momentary', []);
+            this.#loudnessHistories[i].set('short-term', []);
+          }
+          break;
+        default:
+          break;
+      }
+    };
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
