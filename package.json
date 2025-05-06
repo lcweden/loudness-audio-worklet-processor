@@ -4,10 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev:playground": "VITE_MODE=playground vite",
-    "dev:demo": "VITE_MODE=demo vite",
-    "build:lib": "tsc -b && VITE_MODE=lib vite build",
-    "build:demo": "tsc -b && VITE_MODE=playground vite build",
+    "dev": "VITE_MODE=playground vite",
+    "demo": "VITE_MODE=demo vite",
+    "build": "tsc -b && VITE_MODE=lib vite build",
     "preview": "vite preview",
     "format": "prettier --write ."
   },
