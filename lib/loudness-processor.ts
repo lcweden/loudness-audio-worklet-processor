@@ -1,7 +1,7 @@
 import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
 import { CHANNEL_WEIGHT_FACTORS, K_WEIGHTING_BIQUAD_COEFFICIENTS } from './constants';
-import type { Metrics } from './type';
+import type { EnergyBuffer, KWeightingFilters, Metrics } from './type';
 
 /**
  * A class that implements the loudness algorithm as specified in ITU-R, EBU.
@@ -9,10 +9,10 @@ import type { Metrics } from './type';
  * @class
  * @extends AudioWorkletProcessor
  */
-class _ extends AudioWorkletProcessor {
-  biquadraticFilters: [BiquadraticFilter, BiquadraticFilter][][] = [];
-  blocks: number[][] = [];
-  circularBuffers: [CircularBuffer<number>, CircularBuffer<number>, CircularBuffer<number>][] = [];
+class LoudnessProcessor extends AudioWorkletProcessor {
+  kWeightingFilters: KWeightingFilters<BiquadraticFilter> = [];
+  energyBuffers: EnergyBuffer<CircularBuffer<number>> = [];
+  energyBlocks: number[][] = [];
   currentMetrics: Metrics[] = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
@@ -31,12 +31,12 @@ class _ extends AudioWorkletProcessor {
     }
 
     for (let i = 0; i < numberOfInputs; i++) {
-      if (!this.biquadraticFilters[i]) {
-        this.biquadraticFilters[i] = [];
+      if (!this.kWeightingFilters[i]) {
+        this.kWeightingFilters[i] = [];
       }
 
-      if (!this.circularBuffers[i]) {
-        this.circularBuffers[i] = [
+      if (!this.energyBuffers[i]) {
+        this.energyBuffers[i] = [
           new CircularBuffer(Math.ceil(sampleRate * 0.4)),
           new CircularBuffer(Math.ceil(sampleRate * 0.4)),
           new CircularBuffer(Math.ceil(sampleRate * 3.0)),
@@ -62,103 +62,107 @@ class _ extends AudioWorkletProcessor {
       }
 
       for (let j = 0; j < numberOfSamples; j++) {
-        let channelWeightedSampleSum = 0;
+        let totalWeightedEnergy = 0;
 
         for (let k = 0; k < numberOfChannels; k++) {
-          if (!this.biquadraticFilters[i][k]) {
+          if (!this.kWeightingFilters[i][k]) {
             const { highshelf, highpass } = K_WEIGHTING_BIQUAD_COEFFICIENTS;
 
-            this.biquadraticFilters[i][k] = [
+            this.kWeightingFilters[i][k] = [
               new BiquadraticFilter(highshelf.a, highshelf.b),
               new BiquadraticFilter(highpass.a, highpass.b),
             ];
           }
 
           const sample = inputs[i][k][j];
-          const [highshelf, highpass] = this.biquadraticFilters[i][k];
-          const highshelfOutput = highshelf.process(sample);
-          const highpassOutput = highpass.process(highshelfOutput);
+          const [highshelfFilter, highpassFilter] = this.kWeightingFilters[i][k];
+          const highshelfOutput = highshelfFilter.process(sample);
+          const highpassOutput = highpassFilter.process(highshelfOutput);
           const kWeightedSample = highpassOutput;
-          const squaredSample = kWeightedSample * kWeightedSample;
-          const channelWeightedSample = squaredSample * (CHANNEL_WEIGHT_FACTORS[k] ?? 1.0);
+          const squaredKWeightedSample = kWeightedSample * kWeightedSample;
+          const channelWeightedSample = squaredKWeightedSample * (CHANNEL_WEIGHT_FACTORS[k] ?? 1.0);
 
-          channelWeightedSampleSum += channelWeightedSample;
-
-          outputs[i][k].set(inputs[i][k]);
+          totalWeightedEnergy += channelWeightedSample;
         }
 
-        for (const buffer of this.circularBuffers[i]) {
-          buffer.push(channelWeightedSampleSum);
+        for (const buffer of this.energyBuffers[i]) {
+          buffer.push(totalWeightedEnergy);
         }
       }
     }
 
-    for (let i = 0; i < this.circularBuffers.length; i++) {
-      const [integratedBuffer, momentaryBuffer, shortTermBuffer] = this.circularBuffers[i];
+    for (let i = 0; i < this.energyBuffers.length; i++) {
+      const integratedEnergyBuffer = this.energyBuffers[i][0];
+      const momentaryEnergyBuffer = this.energyBuffers[i][1];
+      const shortTermEnergyBuffer = this.energyBuffers[i][2];
 
-      if (!this.blocks[i]) {
-        this.blocks[i] = [];
+      if (!this.energyBlocks[i]) {
+        this.energyBlocks[i] = [];
       }
 
-      if (integratedBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
-        const samples = integratedBuffer.slice();
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
+      if (integratedEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
+        const energies = integratedEnergyBuffer.slice();
+        const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
 
-        this.blocks[i].push(mean);
+        this.energyBlocks[i].push(meanEnergy);
       }
 
-      if (momentaryBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
-        const samples = momentaryBuffer.slice();
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-        const lkfs = energyToLkfs(mean);
+      if (momentaryEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
+        const energies = momentaryEnergyBuffer.slice();
+        const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+        const loudness = energyToLkfs(meanEnergy);
 
-        this.currentMetrics[i].momentaryLoudness = lkfs;
+        this.currentMetrics[i].momentaryLoudness = loudness;
       }
 
-      if (shortTermBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
-        const samples = shortTermBuffer.slice();
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-        const lkfs = energyToLkfs(mean);
+      if (shortTermEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
+        const energies = shortTermEnergyBuffer.slice();
+        const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+        const loudness = energyToLkfs(meanEnergy);
 
-        this.currentMetrics[i].shortTermLoudness = lkfs;
+        this.currentMetrics[i].shortTermLoudness = loudness;
       }
     }
 
-    for (let i = 0; i < this.blocks.length; i++) {
-      const blockLoudness = this.blocks[i].map(energyToLkfs);
-      const absoluteGatedEnergy = this.blocks[i].filter((_, k) => blockLoudness[k] > -70);
+    for (let i = 0; i < this.energyBlocks.length; i++) {
+      const blocks = this.energyBlocks[i].map(energyToLkfs);
+      const absoluteGatedEnergyBlocks = this.energyBlocks[i].filter((_, k) => blocks[k] > -70);
 
-      if (!absoluteGatedEnergy.length) {
+      if (!absoluteGatedEnergyBlocks.length) {
         this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
-
         continue;
       }
 
-      const absoluteGatedEnergySum = absoluteGatedEnergy.reduce((a, b) => a + b, 0);
-      const absoluteGatedEnergyMean = absoluteGatedEnergySum / absoluteGatedEnergy.length;
-      const absoluteGatedLoudness = energyToLkfs(absoluteGatedEnergyMean);
-      const relativeGatedEnergy = absoluteGatedEnergy.filter(
+      const sumOfAbsoluteGatedEnergy = absoluteGatedEnergyBlocks.reduce((a, b) => a + b, 0);
+      const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergyBlocks.length;
+      const absoluteGatedLoudness = energyToLkfs(absoluteGatedMeanEnergy);
+      const relativeGatedEnergyBlocks = absoluteGatedEnergyBlocks.filter(
         (v) => energyToLkfs(v) > absoluteGatedLoudness - 10
       );
 
-      if (!relativeGatedEnergy.length) {
+      if (!relativeGatedEnergyBlocks.length) {
         this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
-
         continue;
       }
 
-      const relativeEnergySum = relativeGatedEnergy.reduce((a, b) => a + b, 0);
-      const relativeEnergyMean = relativeEnergySum / relativeGatedEnergy.length;
-      const lkfs = energyToLkfs(relativeEnergyMean);
+      const sumOfRelativeGatedEnergy = relativeGatedEnergyBlocks.reduce((a, b) => a + b, 0);
+      const relativeGatedMeanEnergy = sumOfRelativeGatedEnergy / relativeGatedEnergyBlocks.length;
+      const loudness = energyToLkfs(relativeGatedMeanEnergy);
 
-      this.currentMetrics[i].integratedLoudness = lkfs;
+      this.currentMetrics[i].integratedLoudness = loudness;
     }
 
-    this.port.postMessage({ metrics: this.currentMetrics });
+    for (let i = 0; i < outputs.length; i++) {
+      for (let j = 0; j < outputs[i].length; j++) {
+        outputs[i][j].set(inputs[i][j]);
+      }
+    }
+
+    this.port.postMessage({ currentFrame, currentTime, currentMetrics: this.currentMetrics });
 
     return true;
   }
 }
 
-export { _ as LoudnessProcessor };
+export { LoudnessProcessor };
 export type { Metrics };

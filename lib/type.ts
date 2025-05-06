@@ -1,3 +1,7 @@
+type KWeightingFilters<T> = [T, T][][];
+
+type EnergyBuffer<T> = [T, T, T][];
+
 type Metrics = {
   integratedLoudness: number;
   shortTermLoudness: number;
@@ -14,4 +18,4 @@ type Metrics = {
   dynamicRange: number;
 };
 
-export type { Metrics };
+export type { EnergyBuffer, KWeightingFilters, Metrics };
