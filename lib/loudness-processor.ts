@@ -1,5 +1,6 @@
 import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
+import { CHANNEL_WEIGHT_FACTORS, K_WEIGHTING_BIQUAD_COEFFICIENTS } from './constants';
 import type { Metrics } from './type';
 
 /**
@@ -9,24 +10,9 @@ import type { Metrics } from './type';
  * @extends AudioWorkletProcessor
  */
 class _ extends AudioWorkletProcessor {
-  static FRAME_SIZE = 128;
-
-  static K_WEIGHTING_BIQUAD_COEFFICIENTS = {
-    highshelf: {
-      a: [-1.69065929318241, 0.73248077421585],
-      b: [1.53512485958697, -2.69169618940638, 1.19839281085285],
-    },
-    highpass: {
-      a: [-1.99004745483398, 0.99007225036621],
-      b: [1.0, -2.0, 1.0],
-    },
-  };
-
-  static CHANNEL_WEIGHT_FACTORS = [1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0];
-
   biquadraticFilters: [BiquadraticFilter, BiquadraticFilter][][] = [];
-  blocks: number[] = [];
-  circularBuffers: [CircularBuffer<number>, CircularBuffer<number>][] = [];
+  blocks: number[][] = [];
+  circularBuffers: [CircularBuffer<number>, CircularBuffer<number>, CircularBuffer<number>][] = [];
   currentMetrics: Metrics[] = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
@@ -34,11 +20,13 @@ class _ extends AudioWorkletProcessor {
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
+    const energyToLkfs = (energy: number) => -0.691 + 10 * Math.log10(energy + Number.EPSILON);
     const numberOfInputs = inputs.length;
     const numberOfChannels = inputs[0]?.length || 0;
     const numberOfSamples = inputs[0]?.[0]?.length || 0;
+    const frameSize = numberOfSamples;
 
-    if (numberOfInputs === 0 || numberOfChannels === 0 || numberOfSamples === 0) {
+    if (frameSize === 0) {
       return true;
     }
 
@@ -49,8 +37,9 @@ class _ extends AudioWorkletProcessor {
 
       if (!this.circularBuffers[i]) {
         this.circularBuffers[i] = [
-          new CircularBuffer((sampleRate * 0.4) / _.FRAME_SIZE),
-          new CircularBuffer((sampleRate * 3.0) / _.FRAME_SIZE),
+          new CircularBuffer(Math.ceil(sampleRate * 0.4)),
+          new CircularBuffer(Math.ceil(sampleRate * 0.4)),
+          new CircularBuffer(Math.ceil(sampleRate * 3.0)),
         ];
       }
 
@@ -77,7 +66,7 @@ class _ extends AudioWorkletProcessor {
 
         for (let k = 0; k < numberOfChannels; k++) {
           if (!this.biquadraticFilters[i][k]) {
-            const { highshelf, highpass } = _.K_WEIGHTING_BIQUAD_COEFFICIENTS;
+            const { highshelf, highpass } = K_WEIGHTING_BIQUAD_COEFFICIENTS;
 
             this.biquadraticFilters[i][k] = [
               new BiquadraticFilter(highshelf.a, highshelf.b),
@@ -91,7 +80,7 @@ class _ extends AudioWorkletProcessor {
           const highpassOutput = highpass.process(highshelfOutput);
           const kWeightedSample = highpassOutput;
           const squaredSample = kWeightedSample * kWeightedSample;
-          const channelWeightedSample = squaredSample * (_.CHANNEL_WEIGHT_FACTORS[k] ?? 1.0);
+          const channelWeightedSample = squaredSample * (CHANNEL_WEIGHT_FACTORS[k] ?? 1.0);
 
           channelWeightedSampleSum += channelWeightedSample;
 
@@ -105,12 +94,20 @@ class _ extends AudioWorkletProcessor {
     }
 
     for (let i = 0; i < this.circularBuffers.length; i++) {
-      const [momentaryBuffer, shortTermBuffer] = this.circularBuffers[i];
-      const isMomentaryReady = currentFrame % (((sampleRate * 0.4) / 128) * 0.1 * 128) === 0;
-      const isShortTermReady = currentFrame % (((sampleRate * 3.0) / 128) * 0.1 * 128) === 0;
-      const energyToLkfs = (energy: number) => -0.691 + 10 * Math.log10(energy + Number.EPSILON);
+      const [integratedBuffer, momentaryBuffer, shortTermBuffer] = this.circularBuffers[i];
 
-      if (momentaryBuffer.isFull() && isMomentaryReady) {
+      if (!this.blocks[i]) {
+        this.blocks[i] = [];
+      }
+
+      if (integratedBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
+        const samples = integratedBuffer.slice();
+        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
+
+        this.blocks[i].push(mean);
+      }
+
+      if (momentaryBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
         const samples = momentaryBuffer.slice();
         const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
         const lkfs = energyToLkfs(mean);
@@ -118,7 +115,7 @@ class _ extends AudioWorkletProcessor {
         this.currentMetrics[i].momentaryLoudness = lkfs;
       }
 
-      if (shortTermBuffer.isFull() && isShortTermReady) {
+      if (shortTermBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
         const samples = shortTermBuffer.slice();
         const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
         const lkfs = energyToLkfs(mean);
@@ -127,7 +124,37 @@ class _ extends AudioWorkletProcessor {
       }
     }
 
-    this.port.postMessage(this.currentMetrics);
+    for (let i = 0; i < this.blocks.length; i++) {
+      const blockLoudness = this.blocks[i].map(energyToLkfs);
+      const absoluteGatedEnergy = this.blocks[i].filter((_, k) => blockLoudness[k] > -70);
+
+      if (!absoluteGatedEnergy.length) {
+        this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
+
+        continue;
+      }
+
+      const absoluteGatedEnergySum = absoluteGatedEnergy.reduce((a, b) => a + b, 0);
+      const absoluteGatedEnergyMean = absoluteGatedEnergySum / absoluteGatedEnergy.length;
+      const absoluteGatedLoudness = energyToLkfs(absoluteGatedEnergyMean);
+      const relativeGatedEnergy = absoluteGatedEnergy.filter(
+        (v) => energyToLkfs(v) > absoluteGatedLoudness - 10
+      );
+
+      if (!relativeGatedEnergy.length) {
+        this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
+
+        continue;
+      }
+
+      const relativeEnergySum = relativeGatedEnergy.reduce((a, b) => a + b, 0);
+      const relativeEnergyMean = relativeEnergySum / relativeGatedEnergy.length;
+      const lkfs = energyToLkfs(relativeEnergyMean);
+
+      this.currentMetrics[i].integratedLoudness = lkfs;
+    }
+
+    this.port.postMessage({ metrics: this.currentMetrics });
 
     return true;
   }
