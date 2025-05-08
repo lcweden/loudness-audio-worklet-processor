@@ -125,6 +125,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         const loudness = energyToLkfs(meanEnergy);
 
         this.currentMetrics[i].shortTermLoudness = loudness;
+        this.currentMetrics[i].maximumShortTermLoudness = Math.max(
+          this.currentMetrics[i].maximumShortTermLoudness,
+          loudness
+        );
       }
     }
 
@@ -154,10 +158,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       const loudness = energyToLkfs(relativeGatedMeanEnergy);
 
       this.currentMetrics[i].integratedLoudness = loudness;
-      this.currentMetrics[i].maximumShortTermLoudness = Math.max(
-        this.currentMetrics[i].maximumShortTermLoudness,
-        loudness
-      );
     }
 
     for (let i = 0; i < outputs.length; i++) {
@@ -173,4 +173,3 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 }
 
 export { LoudnessProcessor };
-export type { Metrics };
