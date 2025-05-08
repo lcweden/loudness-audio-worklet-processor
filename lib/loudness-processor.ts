@@ -13,6 +13,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
   kWeightingFilters: KWeightingFilters<BiquadraticFilter> = [];
   energyBuffers: EnergyBuffer<CircularBuffer<number>> = [];
   energyBlocks: number[][] = [];
+  shortTermEnergyBlocks: number[][] = [];
   currentMetrics: Metrics[] = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
@@ -45,17 +46,17 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
       if (!this.currentMetrics[i]) {
         this.currentMetrics[i] = {
-          integratedLoudness: Number.NEGATIVE_INFINITY,
-          shortTermLoudness: Number.NEGATIVE_INFINITY,
-          momentaryLoudness: Number.NEGATIVE_INFINITY,
+          integratedLoudness: Number.NEGATIVE_INFINITY, // ok
+          shortTermLoudness: Number.NEGATIVE_INFINITY, // ok
+          momentaryLoudness: Number.NEGATIVE_INFINITY, // ok
           loudnessRange: Number.NEGATIVE_INFINITY,
           truePeakLevel: Number.NEGATIVE_INFINITY,
-          maximumMomentaryLoudness: Number.NEGATIVE_INFINITY,
-          maximumShortTermLoudness: Number.NEGATIVE_INFINITY,
+          maximumMomentaryLoudness: Number.NEGATIVE_INFINITY, // ok
+          maximumShortTermLoudness: Number.NEGATIVE_INFINITY, // ok
           maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
           programLoudness: Number.NEGATIVE_INFINITY,
-          targetLoudness: Number.NEGATIVE_INFINITY,
-          loudnessDeviation: Number.NEGATIVE_INFINITY,
+          targetLoudness: -23, // ok
+          loudnessDeviation: Number.NEGATIVE_INFINITY, // ok
           samplePeak: Number.NEGATIVE_INFINITY,
           dynamicRange: Number.NEGATIVE_INFINITY,
         };
@@ -74,9 +75,8 @@ class LoudnessProcessor extends AudioWorkletProcessor {
             ];
           }
 
-          const sample = inputs[i][k][j];
           const [highshelfFilter, highpassFilter] = this.kWeightingFilters[i][k];
-          const highshelfOutput = highshelfFilter.process(sample);
+          const highshelfOutput = highshelfFilter.process(inputs[i][k][j]);
           const highpassOutput = highpassFilter.process(highshelfOutput);
           const kWeightedSample = highpassOutput;
           const squaredKWeightedSample = kWeightedSample * kWeightedSample;
@@ -98,6 +98,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
       if (!this.energyBlocks[i]) {
         this.energyBlocks[i] = [];
+      }
+
+      if (!this.shortTermEnergyBlocks[i]) {
+        this.shortTermEnergyBlocks[i] = [];
       }
 
       if (integratedEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
@@ -122,6 +126,9 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       if (shortTermEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
         const energies = shortTermEnergyBuffer.slice();
         const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+
+        this.shortTermEnergyBlocks[i].push(meanEnergy);
+
         const loudness = energyToLkfs(meanEnergy);
 
         this.currentMetrics[i].shortTermLoudness = loudness;
@@ -158,6 +165,22 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       const loudness = energyToLkfs(relativeGatedMeanEnergy);
 
       this.currentMetrics[i].integratedLoudness = loudness;
+      this.currentMetrics[i].loudnessDeviation = loudness - this.currentMetrics[i].targetLoudness;
+    }
+
+    for (let i = 0; i < this.shortTermEnergyBlocks.length; i++) {
+      const blocks = this.energyBlocks[i].map(energyToLkfs);
+      const sorted = blocks.slice().sort((a, b) => a - b);
+      const lowerIdx = Math.floor(sorted.length * 0.1);
+      const upperIdx = Math.ceil(sorted.length * 0.95);
+      const trimmed = sorted.slice(lowerIdx, upperIdx);
+
+      if (!trimmed.length) {
+        this.currentMetrics[i].loudnessRange = Number.NEGATIVE_INFINITY;
+        continue;
+      }
+
+      this.currentMetrics[i].loudnessRange = Math.max(...trimmed) - Math.min(...trimmed);
     }
 
     for (let i = 0; i < outputs.length; i++) {
