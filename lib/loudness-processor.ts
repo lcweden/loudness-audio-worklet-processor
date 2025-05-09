@@ -1,7 +1,7 @@
 import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
 import { CHANNEL_WEIGHT_FACTORS, K_WEIGHTING_BIQUAD_COEFFICIENTS } from './constants';
-import type { EnergyBuffer, KWeightingFilters, Metrics } from './type';
+import type { Metrics } from './type';
 
 /**
  * A class that implements the loudness algorithm as specified in ITU-R, EBU.
@@ -10,10 +10,9 @@ import type { EnergyBuffer, KWeightingFilters, Metrics } from './type';
  * @extends AudioWorkletProcessor
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
-  kWeightingFilters: KWeightingFilters<BiquadraticFilter> = [];
-  energyBuffers: EnergyBuffer<CircularBuffer<number>> = [];
-  energyBlocks: number[][] = [];
-  shortTermEnergyBlocks: number[][] = [];
+  kWeightingFilters: [BiquadraticFilter, BiquadraticFilter][][] = [];
+  energyBuffers: [CircularBuffer<number>, CircularBuffer<number>, CircularBuffer<number>][] = [];
+  energyBlocks: [number[], number[]][] = [];
   currentMetrics: Metrics[] = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
@@ -97,18 +96,14 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       const shortTermEnergyBuffer = this.energyBuffers[i][2];
 
       if (!this.energyBlocks[i]) {
-        this.energyBlocks[i] = [];
-      }
-
-      if (!this.shortTermEnergyBlocks[i]) {
-        this.shortTermEnergyBlocks[i] = [];
+        this.energyBlocks[i] = [[], []];
       }
 
       if (integratedEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
         const energies = integratedEnergyBuffer.slice();
         const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
 
-        this.energyBlocks[i].push(meanEnergy);
+        this.energyBlocks[i][0].push(meanEnergy);
       }
 
       if (momentaryEnergyBuffer.isFull() && currentFrame % Math.ceil(sampleRate * 0.1) === 0) {
@@ -127,7 +122,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         const energies = shortTermEnergyBuffer.slice();
         const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
 
-        this.shortTermEnergyBlocks[i].push(meanEnergy);
+        this.energyBlocks[i][1].push(meanEnergy);
 
         const loudness = energyToLkfs(meanEnergy);
 
@@ -140,47 +135,61 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     }
 
     for (let i = 0; i < this.energyBlocks.length; i++) {
-      const blocks = this.energyBlocks[i].map(energyToLkfs);
-      const absoluteGatedEnergyBlocks = this.energyBlocks[i].filter((_, k) => blocks[k] > -70);
+      const integratedEnergyBlocks = this.energyBlocks[i][0];
+      const shortTermEnergyBlocks = this.energyBlocks[i][1];
 
-      if (!absoluteGatedEnergyBlocks.length) {
-        this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
-        continue;
+      if (integratedEnergyBlocks) {
+        const integratedLoudnessBlocks = integratedEnergyBlocks.map(energyToLkfs);
+        const absoluteGatedEnergyBlocks = integratedEnergyBlocks.filter(
+          (_, k) => integratedLoudnessBlocks[k] > -70
+        );
+
+        if (!absoluteGatedEnergyBlocks.length) {
+          this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
+          continue;
+        }
+
+        const sumOfAbsoluteGatedEnergy = absoluteGatedEnergyBlocks.reduce((a, b) => a + b, 0);
+        const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergyBlocks.length;
+        const absoluteGatedLoudness = energyToLkfs(absoluteGatedMeanEnergy);
+        const relativeGatedEnergyBlocks = absoluteGatedEnergyBlocks.filter(
+          (v) => energyToLkfs(v) > absoluteGatedLoudness - 10
+        );
+
+        if (!relativeGatedEnergyBlocks.length) {
+          this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
+          continue;
+        }
+
+        const sumOfRelativeGatedEnergy = relativeGatedEnergyBlocks.reduce((a, b) => a + b, 0);
+        const relativeGatedMeanEnergy = sumOfRelativeGatedEnergy / relativeGatedEnergyBlocks.length;
+        const loudness = energyToLkfs(relativeGatedMeanEnergy);
+
+        this.currentMetrics[i].integratedLoudness = loudness;
+        this.currentMetrics[i].loudnessDeviation = loudness - this.currentMetrics[i].targetLoudness;
       }
 
-      const sumOfAbsoluteGatedEnergy = absoluteGatedEnergyBlocks.reduce((a, b) => a + b, 0);
-      const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergyBlocks.length;
-      const absoluteGatedLoudness = energyToLkfs(absoluteGatedMeanEnergy);
-      const relativeGatedEnergyBlocks = absoluteGatedEnergyBlocks.filter(
-        (v) => energyToLkfs(v) > absoluteGatedLoudness - 10
-      );
+      if (shortTermEnergyBlocks) {
+        const shortTermLoudnessBlocks = shortTermEnergyBlocks.map(energyToLkfs);
+        const sortedLoudnessBlocks = shortTermLoudnessBlocks.toSorted((a, b) => a - b);
+        const lowerPercentileIndex = Math.floor(sortedLoudnessBlocks.length * 0.1);
+        const upperPercentileIndex = Math.ceil(sortedLoudnessBlocks.length * 0.95);
+        const trimmedLoudnessBlocks = sortedLoudnessBlocks.slice(
+          lowerPercentileIndex,
+          upperPercentileIndex
+        );
 
-      if (!relativeGatedEnergyBlocks.length) {
-        this.currentMetrics[i].integratedLoudness = Number.NEGATIVE_INFINITY;
-        continue;
+        if (!trimmedLoudnessBlocks.length) {
+          this.currentMetrics[i].loudnessRange = Number.NEGATIVE_INFINITY;
+          continue;
+        }
+
+        const maxLoudness = Math.max(...trimmedLoudnessBlocks);
+        const minLoudness = Math.min(...trimmedLoudnessBlocks);
+        const loudnessRange = maxLoudness - minLoudness;
+
+        this.currentMetrics[i].loudnessRange = loudnessRange;
       }
-
-      const sumOfRelativeGatedEnergy = relativeGatedEnergyBlocks.reduce((a, b) => a + b, 0);
-      const relativeGatedMeanEnergy = sumOfRelativeGatedEnergy / relativeGatedEnergyBlocks.length;
-      const loudness = energyToLkfs(relativeGatedMeanEnergy);
-
-      this.currentMetrics[i].integratedLoudness = loudness;
-      this.currentMetrics[i].loudnessDeviation = loudness - this.currentMetrics[i].targetLoudness;
-    }
-
-    for (let i = 0; i < this.shortTermEnergyBlocks.length; i++) {
-      const blocks = this.energyBlocks[i].map(energyToLkfs);
-      const sorted = blocks.slice().sort((a, b) => a - b);
-      const lowerIdx = Math.floor(sorted.length * 0.1);
-      const upperIdx = Math.ceil(sorted.length * 0.95);
-      const trimmed = sorted.slice(lowerIdx, upperIdx);
-
-      if (!trimmed.length) {
-        this.currentMetrics[i].loudnessRange = Number.NEGATIVE_INFINITY;
-        continue;
-      }
-
-      this.currentMetrics[i].loudnessRange = Math.max(...trimmed) - Math.min(...trimmed);
     }
 
     for (let i = 0; i < outputs.length; i++) {
