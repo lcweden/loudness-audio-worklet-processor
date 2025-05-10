@@ -17,6 +17,24 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
+
+    for (let i = 0; i < options.numberOfInputs; i++) {
+      this.currentMetrics[i] = {
+        integratedLoudness: Number.NEGATIVE_INFINITY, // ok
+        shortTermLoudness: Number.NEGATIVE_INFINITY, // ok
+        momentaryLoudness: Number.NEGATIVE_INFINITY, // ok
+        loudnessRange: Number.NEGATIVE_INFINITY, // ok
+        truePeakLevel: Number.NEGATIVE_INFINITY,
+        maximumMomentaryLoudness: Number.NEGATIVE_INFINITY, // ok
+        maximumShortTermLoudness: Number.NEGATIVE_INFINITY, // ok
+        maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
+        programLoudness: Number.NEGATIVE_INFINITY,
+        targetLoudness: -23, // ok
+        loudnessDeviation: Number.NEGATIVE_INFINITY, // ok
+        samplePeak: Number.NEGATIVE_INFINITY,
+        dynamicRange: Number.NEGATIVE_INFINITY,
+      };
+    }
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
@@ -41,24 +59,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
           new CircularBuffer(Math.ceil(sampleRate * 0.4)),
           new CircularBuffer(Math.ceil(sampleRate * 3.0)),
         ];
-      }
-
-      if (!this.currentMetrics[i]) {
-        this.currentMetrics[i] = {
-          integratedLoudness: Number.NEGATIVE_INFINITY, // ok
-          shortTermLoudness: Number.NEGATIVE_INFINITY, // ok
-          momentaryLoudness: Number.NEGATIVE_INFINITY, // ok
-          loudnessRange: Number.NEGATIVE_INFINITY,
-          truePeakLevel: Number.NEGATIVE_INFINITY,
-          maximumMomentaryLoudness: Number.NEGATIVE_INFINITY, // ok
-          maximumShortTermLoudness: Number.NEGATIVE_INFINITY, // ok
-          maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
-          programLoudness: Number.NEGATIVE_INFINITY,
-          targetLoudness: -23, // ok
-          loudnessDeviation: Number.NEGATIVE_INFINITY, // ok
-          samplePeak: Number.NEGATIVE_INFINITY,
-          dynamicRange: Number.NEGATIVE_INFINITY,
-        };
       }
 
       for (let j = 0; j < numberOfSamples; j++) {
