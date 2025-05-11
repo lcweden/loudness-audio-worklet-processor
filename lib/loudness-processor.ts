@@ -126,13 +126,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
     for (let i = 0; i < this.shortTermLoudnessHistory.length; i++) {
       const sortedLoudnesses = this.shortTermLoudnessHistory[i].toSorted((a, b) => a - b);
-      // const lowerPercentile = Math.floor(sortedLoudnesses.length * 0.1);
-      // const upperPercentile = Math.round(sortedLoudnesses.length * 0.95);
-      // const trimmedLoudnesses = sortedLoudnesses.slice(lowerPercentile, upperPercentile);
-      // const maxLoudness = Math.max(...trimmedLoudnesses);
-      // const minLoudness = Math.min(...trimmedLoudnesses);
-      // const loudnessRange = maxLoudness - minLoudness;
-
       const lowerPercentile = sortedLoudnesses[Math.floor(sortedLoudnesses.length * 0.1)];
       const upperPercentile = sortedLoudnesses[Math.floor(sortedLoudnesses.length * 0.95)];
       const loudnessRange = upperPercentile - lowerPercentile;
