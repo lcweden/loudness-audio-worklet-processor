@@ -1,7 +1,7 @@
 import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
 import { CHANNEL_WEIGHT_FACTORS, K_WEIGHTING_BIQUAD_COEFFICIENTS } from './constants';
-import type { Metrics } from './type';
+import type { Metrics } from './types';
 
 /**
  * A class that implements the loudness algorithm as specified in ITU-R BS.1771.
@@ -19,8 +19,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
-
-    console.log(options.outputChannelCount);
 
     for (let i = 0; i < options.numberOfInputs; i++) {
       this.metrics[i] = {
@@ -116,29 +114,40 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       const loudness = -0.691 + 10 * Math.log10(meanEnergy + Number.EPSILON);
 
       this.metrics[i].shortTermLoudness = loudness;
-
-      if (currentFrame % Math.round(sampleRate * 1) !== 0) {
-        continue;
-      }
-
       this.shortTermLoudnessHistory[i].push(loudness);
     }
 
     for (let i = 0; i < this.shortTermLoudnessHistory.length; i++) {
+      if (this.shortTermLoudnessHistory[i].length < 2) {
+        continue;
+      }
+
       const sortedLoudnesses = this.shortTermLoudnessHistory[i].toSorted((a, b) => a - b);
-      const lowerPercentile = sortedLoudnesses[Math.floor(sortedLoudnesses.length * 0.1)];
-      const upperPercentile = sortedLoudnesses[Math.floor(sortedLoudnesses.length * 0.95)];
+      const [lowerPercentile, upperPercentile] = [0.1, 0.95].map((percentile) => {
+        const lowerIndex = Math.floor(percentile * (sortedLoudnesses.length - 1));
+        const upperIndex = Math.ceil(percentile * (sortedLoudnesses.length - 1));
+
+        if (upperIndex === lowerIndex) {
+          return sortedLoudnesses[lowerIndex];
+        }
+
+        return (
+          sortedLoudnesses[lowerIndex] +
+          (sortedLoudnesses[upperIndex] - sortedLoudnesses[lowerIndex]) *
+            (percentile * (sortedLoudnesses.length - 1) - lowerIndex)
+        );
+      });
+
       const loudnessRange = upperPercentile - lowerPercentile;
 
       this.metrics[i].loudnessRange = loudnessRange;
     }
 
     for (let i = 0; i < this.integratedEnergyBlocks.length; i++) {
-      const integratedEnergyBlocks = this.integratedEnergyBlocks[i];
-      const integratedLoudnesses = integratedEnergyBlocks.map(
+      const integratedLoudnesses = this.integratedEnergyBlocks[i].map(
         (energy) => -0.691 + 10 * Math.log10(energy + Number.EPSILON)
       );
-      const absoluteGatedEnergyBlocks = integratedEnergyBlocks.filter(
+      const absoluteGatedEnergyBlocks = this.integratedEnergyBlocks[i].filter(
         (_, index) => integratedLoudnesses[index] > -70
       );
 
