@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "VITE_MODE=playground vite",
     "demo": "VITE_MODE=demo vite",
-    "build": "tsc -b && VITE_MODE=lib vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
     "format": "prettier --write ."
   },
