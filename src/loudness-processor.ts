@@ -2,6 +2,7 @@ import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
 import {
   CHANNEL_WEIGHT_FACTORS,
+  FIR_COEFFICIENTS,
   K_WEIGHTING_BIQUAD_COEFFICIENTS,
   LOUDNESS_RANGE_LOWER_PERCENTILE,
   LOUDNESS_RANGE_UPPER_PERCENTILE,
@@ -12,6 +13,7 @@ import {
   SHORT_TERM_HOP_INTERVAL_SEC,
   SHORT_TERM_WINDOW_SEC,
 } from './constants';
+import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
 import type { Metrics } from './types';
 import { calculateLufs } from './utils';
 
@@ -23,6 +25,7 @@ import { calculateLufs } from './utils';
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
   kWeightingFilters: [BiquadraticFilter, BiquadraticFilter][][] = [];
+  truePeakFilters: FiniteImpulseResponseFilter[][][] = [];
   momentaryEnergyBuffers: CircularBuffer<number>[] = [];
   shortTermEnergyBuffers: CircularBuffer<number>[] = [];
   shortTermLoudnessHistory: Array<number>[] = [];
@@ -48,6 +51,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
     for (let i = 0; i < inputs.length; i++) {
       this.kWeightingFilters[i] ??= [];
+      this.truePeakFilters[i] ??= [];
       weightedInputs[i] = [];
 
       for (let j = 0; j < inputs[i].length; j++) {
@@ -61,6 +65,9 @@ class LoudnessProcessor extends AudioWorkletProcessor {
             K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.b
           ),
         ];
+        this.truePeakFilters[i][j] ??= FIR_COEFFICIENTS.map(
+          (coefficients) => new FiniteImpulseResponseFilter(coefficients)
+        );
         weightedInputs[i][j] = new Float32Array(inputs[i][j].length);
 
         for (let k = 0; k < inputs[i][j].length; k++) {
@@ -71,6 +78,22 @@ class LoudnessProcessor extends AudioWorkletProcessor {
           const channelWeightedSample = kWeightedSample * CHANNEL_WEIGHT_FACTORS[j];
 
           weightedInputs[i][j][k] = channelWeightedSample;
+
+          const attenuation = Math.pow(10, -12.04 / 20);
+          const attenuatedSample = inputs[i][j][k] * attenuation;
+          const truePeaks = [];
+
+          for (const filter of this.truePeakFilters[i][j]) {
+            truePeaks.push(Math.abs(filter.process(attenuatedSample)));
+          }
+
+          const maximumTruePeak = Math.max(...truePeaks);
+          const maximumTruePeakLevel = 20 * Math.log10(maximumTruePeak) + 12.04;
+
+          this.metrics[i].maximumTruePeakLevel = Math.max(
+            this.metrics[i].maximumTruePeakLevel,
+            maximumTruePeakLevel
+          );
         }
       }
     }
