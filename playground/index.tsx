@@ -1,5 +1,6 @@
 import { JSXElement } from 'solid-js';
 import { render } from 'solid-js/web';
+import { LoudnessProcessorData } from '../types';
 import './index.css';
 
 const root = document.getElementById('root');
@@ -19,7 +20,7 @@ const app = (): JSXElement => {
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     const { numberOfChannels, length, sampleRate } = audioBuffer;
     const offlineAudioBuffer = new OfflineAudioContext(numberOfChannels, length, sampleRate);
-    const moduleUrl = new URL('../lib/index.ts', import.meta.url);
+    const moduleUrl = new URL('../src/index.ts', import.meta.url);
 
     await offlineAudioBuffer.audioWorklet.addModule(moduleUrl);
 
@@ -29,7 +30,7 @@ const app = (): JSXElement => {
     sourceNode.connect(workletNode).connect(offlineAudioBuffer.destination);
     sourceNode.start();
 
-    workletNode.port.onmessage = (event: MessageEvent) => {
+    workletNode.port.onmessage = (event: MessageEvent<LoudnessProcessorData>) => {
       console.log(event.data);
     };
 
