@@ -18,7 +18,7 @@ import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
 import { calculateLufs } from './utils';
 
 /**
- * A class that implements the loudness algorithm as specified in ITU-R BS.1771.
+ * A class that implements the loudness algorithm as specified in ITU-R BS.1770-5.
  *
  * @class
  * @extends AudioWorkletProcessor
