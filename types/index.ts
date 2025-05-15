@@ -6,4 +6,10 @@ type Metrics = {
   maximumTruePeakLevel: number;
 };
 
-export type { Metrics };
+type LoudnessProcessorData = {
+  currentFrame: number;
+  currentTime: number;
+  currentMetrics: Metrics[];
+};
+
+export type { LoudnessProcessorData, Metrics };

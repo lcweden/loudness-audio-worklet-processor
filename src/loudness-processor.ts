@@ -1,3 +1,4 @@
+import { Metrics } from '../types';
 import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
 import {
@@ -14,7 +15,6 @@ import {
   SHORT_TERM_WINDOW_SEC,
 } from './constants';
 import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
-import type { Metrics } from './types';
 import { calculateLufs } from './utils';
 
 /**
@@ -222,7 +222,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
     }
 
-    this.port.postMessage(this.metrics);
+    this.port.postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
 
     return true;
   }
