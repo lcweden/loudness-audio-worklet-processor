@@ -9,10 +9,15 @@ let config: UserConfig;
 if (mode) {
   config = defineConfig({
     plugins: [solid(), tailwindcss()],
-    server: { host: true },
+    server: { host: '127.0.0.1', open: true },
+    preview: { host: '127.0.0.1', open: true },
     root: mode,
     publicDir: '../public',
-    build: { outDir: `dist/${mode}`, emptyOutDir: true },
+    build: {
+      outDir: '../dist',
+      emptyOutDir: false,
+    },
+    base: '/loudness-audio-worklet-processor/',
   });
 } else {
   config = defineConfig({
@@ -24,8 +29,8 @@ if (mode) {
       },
       minify: true,
       sourcemap: false,
-      outDir: 'lib',
-      emptyOutDir: true,
+      outDir: 'dist',
+      emptyOutDir: false,
       copyPublicDir: false,
     },
   });
