@@ -3,6 +3,7 @@ import { defineConfig, UserConfig } from 'vite';
 import solid from 'vite-plugin-solid';
 
 const mode = process.env.VITE_MODE as 'demo' | 'playground';
+const isDev = (process.env.NODE_ENV as 'development' | 'production') === 'development';
 
 let config: UserConfig;
 
@@ -17,7 +18,7 @@ if (mode) {
       outDir: '../dist',
       emptyOutDir: false,
     },
-    base: '/loudness-audio-worklet-processor/',
+    base: isDev ? undefined : '/loudness-audio-worklet-processor/',
   });
 } else {
   config = defineConfig({
