@@ -1,0 +1,58 @@
+import { createMemo, createSignal } from 'solid-js';
+
+function createPagination<T>(data?: T[], options?: { pageSize: number }) {
+  const [getData, setData] = createSignal<T[]>(data || []);
+  const [getPageSize, setPageSize] = createSignal<number>(options?.pageSize || 10);
+  const [getCurrentPage, setCurrentPage] = createSignal<number>(1);
+
+  const getTotalPages = createMemo<number>(() => {
+    const data = getData();
+    const pageSize = getPageSize();
+
+    if (!data || !pageSize) {
+      throw new Error('');
+    }
+
+    return Math.max(1, Math.ceil(data.length / pageSize));
+  });
+
+  const getPageData = createMemo(() => {
+    const data = getData();
+    const pageSize = getPageSize();
+    const currentPage = getCurrentPage();
+
+    if (!data || !pageSize) {
+      throw new Error('');
+    }
+
+    const start = (currentPage - 1) * pageSize;
+
+    return data.slice(start, start + pageSize);
+  });
+
+  function prev() {
+    if (getCurrentPage() !== 1) {
+      return setCurrentPage(getCurrentPage() - 1);
+    }
+  }
+
+  function next() {
+    if (getCurrentPage() !== getTotalPages()) {
+      return setCurrentPage(getCurrentPage() + 1);
+    }
+  }
+
+  return {
+    setData,
+    getCurrentPage,
+    setCurrentPage,
+    getPageSize,
+    setPageSize,
+    getTotalPages,
+    getPageData,
+    prev,
+    next,
+  };
+}
+
+export { createPagination };
