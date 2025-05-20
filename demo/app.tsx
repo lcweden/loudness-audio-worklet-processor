@@ -1,5 +1,7 @@
 import { createSignal, For, Match, Show, Switch } from 'solid-js';
 import { AudioLoudnessSnapshot } from '../types';
+import { FileSelector } from './components/file-selector';
+import { StatItem } from './components/stat-item';
 import { createAudioAnalysis } from './composables/audio-analysis';
 import { createPagination } from './composables/pagination';
 
@@ -8,24 +10,8 @@ function App() {
   const [getSnapshot, setSnapshot] = createSignal<AudioLoudnessSnapshot>();
   const [getSnapshots, setSnapshots] = createSignal<AudioLoudnessSnapshot[]>();
   const [getSelectedRange, setSelectedRange] = createSignal<[number, number]>();
+  const { analysis } = createAudioAnalysis<AudioLoudnessSnapshot>(handleAudioAnalysis);
   const snapshots = createPagination<AudioLoudnessSnapshot>();
-  const { analysis } = createAudioAnalysis(handleAudioAnalysis);
-
-  function handleFileSelect(event: Event) {
-    const files = (event.target as HTMLInputElement).files;
-    const file = files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    setFile(file);
-    analysis(file, handleAudioAnalysisEnded);
-  }
-
-  function handleFileCleanUp(_: Event) {
-    setFile(undefined);
-  }
 
   function handleAudioAnalysis(event: MessageEvent) {
     setSnapshot(event.data);
@@ -85,19 +71,10 @@ function App() {
       <div class="bg-base-100 sm:rounded-box container flex flex-1 flex-col sm:m-4 sm:shadow-xl">
         <nav class="flex items-center justify-between p-4">
           <div class="flex items-center gap-1">
-            <label class="btn btn-sm btn-primary max-sm:btn-square">
-              <p>
-                <span class="max-sm:hidden">Select File</span>
-              </p>
-              <input
-                type="file"
-                accept="*"
-                class="hidden"
-                onClick={handleFileCleanUp}
-                onChange={handleFileSelect}
-              />
-            </label>
-
+            <FileSelector
+              onSelect={(file) => (setFile(file), analysis(file, handleAudioAnalysisEnded))}
+              onCleanUp={() => setFile(undefined)}
+            />
             <p class="text-base-content sm:text-md font-mono text-sm font-light">Loudness Meter</p>
           </div>
           <div class="">
@@ -105,34 +82,44 @@ function App() {
           </div>
         </nav>
         <main class="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <div class="stats-vertical stats sm:stats-horizontal card card-border min-h-fit overflow-auto shadow">
-            <div class="stat bg-base-100 place-items-center">
-              <div class="stat-title">Integrated Loudness</div>
-              <div class="stat-value select-text">
-                {getSnapshot()?.currentMetrics[0].integratedLoudness.toFixed(1) ?? '-'}
-              </div>
-              <div class="stat-desc">LUFS</div>
-            </div>
-            <div class="stat bg-base-100 place-items-center">
-              <div class="stat-title">Loudness Range</div>
-              <div class="stat-value select-text">
-                {getSnapshot()?.currentMetrics[0].loudnessRange.toFixed(1) ?? '-'}
-              </div>
-              <div class="stat-desc">LRA</div>
-            </div>
-            <div class="stat bg-base-100 place-items-center">
-              <div class="stat-title">True Peak</div>
-              <div class="stat-value select-text">
-                {getSnapshot()?.currentMetrics[0].maximumTruePeakLevel.toFixed(1) ?? '-'}
-              </div>
-              <div class="stat-desc">dBTP</div>
-            </div>
+          <div class="flex flex-col justify-evenly gap-2 md:flex-row">
+            <For
+              each={
+                [
+                  ['Integrated Loudness', 'integratedLoudness', 'LUFS'],
+                  ['Loudness Range', 'loudnessRange', 'LRA'],
+                  ['True Peak', 'maximumTruePeakLevel', 'dBTP'],
+                ] as [
+                  string,
+                  'integratedLoudness' | 'loudnessRange' | 'maximumTruePeakLevel',
+                  string,
+                ][]
+              }
+            >
+              {([title, key, desc]) => {
+                return (
+                  <StatItem
+                    title={title}
+                    value={(() => {
+                      const snapshot = getSnapshot();
+
+                      if (!snapshot) {
+                        return '-';
+                      }
+
+                      return snapshot.currentMetrics[0][key].toFixed(1);
+                    })()}
+                    desc={desc}
+                  />
+                );
+              }}
+            </For>
           </div>
 
           <div class="card card-border min-h-fit overflow-x-auto shadow">
             <table class="table-sm sm:table-md table">
               <thead>
-                <tr class="bg-base-300">
+                <tr>
                   <th>
                     <input type="checkbox" class="checkbox" onclick={handleTableRowClickAll} />
                   </th>

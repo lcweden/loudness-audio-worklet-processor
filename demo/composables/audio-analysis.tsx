@@ -1,6 +1,6 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
 
-function createAudioAnalysis(callback: (event: MessageEvent) => void) {
+function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
   const [getBuffer, setBuffer] = createSignal<AudioBuffer>();
   const audioWorkletModuleUrl = new URL('../../src/index.ts', import.meta.url);
 
