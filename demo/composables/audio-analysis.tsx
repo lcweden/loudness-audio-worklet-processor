@@ -6,7 +6,7 @@ function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
 
   let audioContext: AudioContext;
 
-  async function analysis(
+  async function process(
     file: File,
     onended?: (this: AudioScheduledSourceNode, ev: Event) => any
   ): Promise<void> {
@@ -47,7 +47,7 @@ function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
     }
   });
 
-  return { getBuffer, analysis };
+  return { getBuffer, process };
 }
 
 export { createAudioAnalysis };

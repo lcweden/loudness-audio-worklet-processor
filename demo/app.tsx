@@ -1,68 +1,43 @@
-import { createSignal, For, Match, Show, Switch } from 'solid-js';
+import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
 import { AudioLoudnessSnapshot } from '../types';
 import { FileSelector } from './components/file-selector';
 import { StatItem } from './components/stat-item';
-import { createAudioAnalysis } from './composables/audio-analysis';
-import { createPagination } from './composables/pagination';
+import { createAudioAnalysis, createPagination, createRange } from './composables';
 
 function App() {
   const [getFile, setFile] = createSignal<File>();
-  const [getSnapshot, setSnapshot] = createSignal<AudioLoudnessSnapshot>();
-  const [getSnapshots, setSnapshots] = createSignal<AudioLoudnessSnapshot[]>();
-  const [getSelectedRange, setSelectedRange] = createSignal<[number, number]>();
-  const { analysis } = createAudioAnalysis<AudioLoudnessSnapshot>(handleAudioAnalysis);
-  const snapshots = createPagination<AudioLoudnessSnapshot>();
+  const [getSnapshots, setSnapshots] = createSignal<AudioLoudnessSnapshot[]>([]);
+  const getSnapshot = createMemo<AudioLoudnessSnapshot | undefined>(() => getSnapshots().at(-1));
+  const audioAnalyzer = createAudioAnalysis<AudioLoudnessSnapshot>(handleAudioAnalysis);
+  const snapshotTable = createPagination<AudioLoudnessSnapshot>();
+  const snapshotTableSelectedRange = createRange();
 
   function handleAudioAnalysis(event: MessageEvent) {
-    setSnapshot(event.data);
     setSnapshots((prev) => [...(prev || []), event.data]);
   }
 
   function handleAudioAnalysisEnded(_: Event) {
-    snapshots.setData(getSnapshots()!);
+    snapshotTable.setData(getSnapshots());
   }
 
   function handleTableRowClick(event: Event) {
     const tableRow = event.currentTarget as HTMLTableRowElement;
     const selectedIndex = Number(tableRow.id);
-    const selectedRange = getSelectedRange();
-
-    if (!selectedRange) {
-      setSelectedRange([selectedIndex, selectedIndex]);
-    } else if (selectedRange.every((value) => value === selectedIndex)) {
-      setSelectedRange(undefined);
-    } else {
-      const [start, end] = selectedRange;
-      if (selectedIndex < start) {
-        setSelectedRange([selectedIndex, end]);
-      } else if (selectedIndex > end) {
-        setSelectedRange([start, selectedIndex]);
-      } else if (selectedIndex === start) {
-        setSelectedRange([start, start]);
-      } else if (selectedIndex === end) {
-        setSelectedRange([end, end]);
-      } else {
-        if (selectedIndex - start < end - selectedIndex) {
-          setSelectedRange([start, selectedIndex]);
-        } else {
-          setSelectedRange([selectedIndex, end]);
-        }
-      }
-    }
+    snapshotTableSelectedRange.select(selectedIndex);
   }
 
   function handleTableRowClickAll(event: Event) {
     const checkbox = event.target as HTMLInputElement;
-    const snapshots = getSnapshots();
+    const snapshotTable = getSnapshots();
 
-    if (!snapshots) {
+    if (!snapshotTable) {
       return;
     }
 
     if (checkbox.checked) {
-      setSelectedRange([0, snapshots.length! - 1]);
+      snapshotTableSelectedRange.selectAll(getSnapshots().length);
     } else {
-      setSelectedRange(undefined);
+      snapshotTableSelectedRange.clear();
     }
   }
 
@@ -72,7 +47,9 @@ function App() {
         <nav class="flex items-center justify-between p-4">
           <div class="flex items-center gap-1">
             <FileSelector
-              onSelect={(file) => (setFile(file), analysis(file, handleAudioAnalysisEnded))}
+              onSelect={(file) => (
+                setFile(file), audioAnalyzer.process(file, handleAudioAnalysisEnded)
+              )}
               onCleanUp={() => setFile(undefined)}
             />
             <p class="text-base-content sm:text-md font-mono text-sm font-light">Loudness Meter</p>
@@ -81,42 +58,26 @@ function App() {
             <a class="btn btn-sm btn-btn-wide btn-primary">GitHub</a>
           </div>
         </nav>
-        <main class="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <div class="flex flex-col justify-evenly gap-2 md:flex-row">
-            <For
-              each={
-                [
-                  ['Integrated Loudness', 'integratedLoudness', 'LUFS'],
-                  ['Loudness Range', 'loudnessRange', 'LRA'],
-                  ['True Peak', 'maximumTruePeakLevel', 'dBTP'],
-                ] as [
-                  string,
-                  'integratedLoudness' | 'loudnessRange' | 'maximumTruePeakLevel',
-                  string,
-                ][]
-              }
-            >
-              {([title, key, desc]) => {
-                return (
-                  <StatItem
-                    title={title}
-                    value={(() => {
-                      const snapshot = getSnapshot();
-
-                      if (!snapshot) {
-                        return '-';
-                      }
-
-                      return snapshot.currentMetrics[0][key].toFixed(1);
-                    })()}
-                    desc={desc}
-                  />
-                );
-              }}
-            </For>
+        <main class="flex flex-1 flex-col gap-4 overflow-hidden overflow-y-auto p-4">
+          <div class="flex flex-col justify-evenly gap-2 overflow-x-auto md:flex-row">
+            <StatItem
+              title="Integrated Loudness"
+              value={getSnapshot()?.currentMetrics[0].integratedLoudness.toFixed(1) ?? '-'}
+              desc="LUFS"
+            />
+            <StatItem
+              title="Loudness Range"
+              value={getSnapshot()?.currentMetrics[0].loudnessRange.toFixed(1) ?? '-'}
+              desc="LRA"
+            />
+            <StatItem
+              title="True Peak"
+              value={getSnapshot()?.currentMetrics[0].maximumTruePeakLevel.toFixed(1) ?? '-'}
+              desc="dBTP"
+            />
           </div>
 
-          <div class="card card-border min-h-fit overflow-x-auto shadow">
+          <div class="card card-border min-h-fit overflow-x-auto">
             <table class="table-sm sm:table-md table">
               <thead>
                 <tr>
@@ -133,31 +94,25 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                <For each={snapshots.getPageData()}>
+                <For each={snapshotTable.getPageData()}>
                   {(snapshot) => {
-                    const index = getSnapshots()!.indexOf(snapshot);
+                    const index = getSnapshots().indexOf(snapshot);
 
                     return (
                       <tr
                         id={String(index)}
-                        class={`${(() => {
-                          const range = getSelectedRange();
-                          const isSelected = range && index >= range[0] && index <= range[1];
-
-                          return isSelected ? 'bg-base-200' : 'bg-base-100';
-                        })()} hover:bg-base-200 cursor-pointer`}
+                        class={`${
+                          snapshotTableSelectedRange.isSelected(index)
+                            ? 'bg-base-200'
+                            : 'bg-base-100'
+                        } hover:bg-base-200 cursor-pointer`}
                         onclick={handleTableRowClick}
                       >
                         <th>
                           <input
                             type="checkbox"
                             class="checkbox"
-                            checked={(() => {
-                              const range = getSelectedRange();
-                              const isSelected = range && index >= range[0] && index <= range[1];
-
-                              return isSelected;
-                            })()}
+                            checked={snapshotTableSelectedRange.isSelected(index)}
                           />
                         </th>
                         <td>{snapshot.currentFrame}</td>
@@ -178,22 +133,24 @@ function App() {
                     <Switch
                       fallback={
                         <div class="join">
-                          <button class="join-item btn" onclick={snapshots.prev}>
+                          <button class="join-item btn" onclick={snapshotTable.prev}>
                             «
                           </button>
-                          <button class="join-item btn">Page {snapshots.getTotalPages()}</button>
-                          <button class="join-item btn" onclick={snapshots.next}>
+                          <button class="join-item btn">
+                            Page {snapshotTable.getTotalPages()}
+                          </button>
+                          <button class="join-item btn" onclick={snapshotTable.next}>
                             »
                           </button>
                         </div>
                       }
                     >
-                      <Match when={!getSnapshots()!?.length}>
+                      <Match when={!getSnapshots().length}>
                         <div role="alert" class="alert">
                           <span>Pending</span>
                         </div>
                       </Match>
-                      <Match when={getSnapshots()!?.length && !snapshots.getPageData().length}>
+                      <Match when={getSnapshots().length && !snapshotTable.getPageData().length}>
                         <div role="alert" class="alert">
                           <span>Loading</span>
                         </div>
@@ -207,7 +164,7 @@ function App() {
         </main>
       </div>
 
-      <Show when={getSelectedRange()}>
+      <Show when={snapshotTableSelectedRange.getRange()}>
         <div class="fixed inset-x-0 bottom-12 mx-auto max-w-96 p-4">
           <div class="bg-base-100 card card-border flex p-4">
             <button class="btn btn-primary">Play</button>
