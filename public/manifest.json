@@ -1,0 +1,47 @@
+{
+  "name": "Loudness Meter",
+  "short_name": "Loudness Meter",
+  "description": "A demo project that implements the loudness audio worklet processor.",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["audio", "utilities", "meter"],
+  "orientation": "portrait",
+  "start_url": ".",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay"],
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "description": "Loudness Meter Interface"
+    },
+    {
+      "src": "screenshots/1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "description": "Loudness Meter Interface"
+    }
+  ]
+}
