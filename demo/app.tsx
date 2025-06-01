@@ -1,19 +1,36 @@
-import { createEffect, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
-import { AudioLoudnessSnapshot, Metrics } from '../types';
+import { createEffect, createMemo, createSignal, createUniqueId, For, Match, Show, Switch } from 'solid-js';
+import type { AudioLoudnessSnapshot, Metrics } from '../types';
 import { FileSelector } from './components/file-selector';
-import { StatItem } from './components/stat-item';
-import { createAudioAnalysis, createPagination, createRange } from './composables';
-import { createChart } from './composables/chart';
+import { createAudioAnalysis, createChart, createPagination, createRange } from './composables';
 
 function App() {
-  const [_, setFile] = createSignal<File>();
+  const [getFile, setFile] = createSignal<File>();
+  const [getIsProccessing, setIsProccessing] = createSignal<boolean>(false);
+  const [getIsProccessFinish, setIsProccessFinish] = createSignal<boolean>(false);
   const [getSnapshots, setSnapshots] = createSignal<AudioLoudnessSnapshot[]>([]);
   const getSnapshot = createMemo<AudioLoudnessSnapshot | undefined>(() => getSnapshots().at(-1));
   const audioAnalyzer = createAudioAnalysis<AudioLoudnessSnapshot>(handleAudioAnalysis);
   const snapshotTable = createPagination<AudioLoudnessSnapshot>();
   const snapshotTableSelectedRange = createRange();
   const snapshotChart = createChart();
-  let chartRef: HTMLDivElement;
+  let chartRef: HTMLDivElement | undefined;
+
+  function handleFileSelect(file: File) {
+    setFile(file);
+    setSnapshots([]);
+    setIsProccessing(true);
+    setIsProccessFinish(false);
+    snapshotTable.setData([]);
+    audioAnalyzer.process(file, handleAudioAnalysisEnded);
+  }
+
+  function handleFileCleanUp() {}
+
+  function handleTablePageSizeChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value);
+    snapshotTable.setPageSize(value);
+  }
 
   function handleAudioAnalysis(event: MessageEvent<AudioLoudnessSnapshot>) {
     const snapshots = getSnapshots();
@@ -39,11 +56,13 @@ function App() {
   function handleAudioAnalysisEnded(_: Event) {
     const snapshots = getSnapshots();
     const legends: Array<[string, keyof Metrics]> = [
-      ['Integrated Loudness', 'integratedLoudness'],
-      ['Short-term Loudness', 'shortTermLoudness'],
-      ['Momentary Loudness', 'momentaryLoudness'],
+      ['Integrated', 'integratedLoudness'],
+      ['Short-term', 'shortTermLoudness'],
+      ['Momentary', 'momentaryLoudness'],
     ];
 
+    setIsProccessing(false);
+    setIsProccessFinish(true);
     snapshotTable.setData(snapshots);
     snapshotChart.setOption({
       tooltip: { trigger: 'axis' },
@@ -68,10 +87,8 @@ function App() {
     });
   }
 
-  function handleTableRowClick(event: Event) {
-    const tableRow = event.currentTarget as HTMLTableRowElement;
-    const selectedIndex = Number(tableRow.id);
-    snapshotTableSelectedRange.select(selectedIndex);
+  function handleTableRowClick(index: number) {
+    snapshotTableSelectedRange.select(index);
   }
 
   function handleTableRowClickAll(event: Event) {
@@ -90,143 +107,233 @@ function App() {
   }
 
   createEffect(() => {
-    if (chartRef) {
+    if (getFile() && chartRef) {
       snapshotChart.init(chartRef);
     }
   });
 
   return (
-    <div class="bg-base-200 flex h-dvh w-dvw justify-center tabular-nums select-none">
-      <div class="bg-base-100 sm:rounded-box container flex flex-1 flex-col sm:m-4 sm:shadow-xl">
-        <nav class="flex items-center justify-between p-4">
-          <div class="flex items-center gap-1">
-            <FileSelector
-              onSelect={(file) => (
-                setFile(file), audioAnalyzer.process(file, handleAudioAnalysisEnded)
-              )}
-              onCleanUp={() => setFile(undefined)}
-            />
-            <p class="text-base-content sm:text-md font-mono text-sm font-light">Loudness Meter</p>
-          </div>
-          <div class="">
-            <a class="btn btn-sm btn-btn-wide btn-primary">GitHub</a>
-          </div>
-        </nav>
-        <main class="flex flex-1 flex-col gap-4 overflow-hidden overflow-y-auto p-4">
-          <div class="flex flex-col justify-evenly gap-2 overflow-x-auto md:flex-row">
-            <StatItem
-              title="Integrated Loudness"
-              value={getSnapshot()?.currentMetrics[0].integratedLoudness ?? '-'}
-              desc="LUFS"
-            />
-            <StatItem
-              title="Loudness Range"
-              value={getSnapshot()?.currentMetrics[0].loudnessRange ?? '-'}
-              desc="LRA"
-            />
-            <StatItem
-              title="True Peak"
-              value={getSnapshot()?.currentMetrics[0].maximumTruePeakLevel ?? '-'}
-              desc="dBTP"
-            />
-          </div>
-
-          <div class="card card-border">
-            <div ref={(ref) => (chartRef = ref)} class="h-full min-h-96 w-full"></div>
-          </div>
-          <div class="card card-border min-h-fit overflow-x-auto">
-            <table class="table-sm sm:table-md table">
-              <thead>
-                <tr>
-                  <th>
-                    <input type="checkbox" class="checkbox" onclick={handleTableRowClickAll} />
-                  </th>
-                  <td>Time</td>
-                  <td>Momentary</td>
-                  <td>Short-term</td>
-                  <td>Integrated</td>
-                  <td>Range</td>
-                  <td>Peak</td>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={snapshotTable.getPageData()}>
-                  {(snapshot) => {
-                    const index = getSnapshots().indexOf(snapshot);
-
-                    return (
-                      <tr
-                        id={String(index)}
-                        class={`${
-                          snapshotTableSelectedRange.isSelected(index)
-                            ? 'bg-base-200'
-                            : 'bg-base-100'
-                        } hover:bg-base-200 cursor-pointer`}
-                        onclick={handleTableRowClick}
-                      >
-                        <th>
-                          <input
-                            type="checkbox"
-                            class="checkbox"
-                            checked={snapshotTableSelectedRange.isSelected(index)}
-                          />
-                        </th>
-                        <td>{snapshot.currentTime} ms</td>
-                        <td>{snapshot.currentMetrics[0].momentaryLoudness}</td>
-                        <td>{snapshot.currentMetrics[0].shortTermLoudness}</td>
-                        <td>{snapshot.currentMetrics[0].integratedLoudness}</td>
-                        <td>{snapshot.currentMetrics[0].loudnessRange}</td>
-                        <td>{snapshot.currentMetrics[0].maximumTruePeakLevel}</td>
-                      </tr>
-                    );
-                  }}
-                </For>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={8}>
-                    <Switch
-                      fallback={
-                        <div class="join">
-                          <button class="join-item btn" onclick={snapshotTable.prev}>
-                            «
-                          </button>
-                          <button class="join-item btn">
-                            Page {snapshotTable.getTotalPages()}
-                          </button>
-                          <button class="join-item btn" onclick={snapshotTable.next}>
-                            »
-                          </button>
-                        </div>
-                      }
-                    >
-                      <Match when={!getSnapshots().length}>
-                        <div role="alert" class="alert">
-                          <span>Pending</span>
-                        </div>
-                      </Match>
-                      <Match when={getSnapshots().length && !snapshotTable.getPageData().length}>
-                        <div role="alert" class="alert">
-                          <span>Loading</span>
-                        </div>
-                      </Match>
-                    </Switch>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </main>
-      </div>
-
-      <Show when={snapshotTableSelectedRange.getRange()}>
-        <div class="fixed inset-x-0 bottom-12 mx-auto max-w-96 p-4">
-          <div class="bg-base-100 card card-border flex p-4">
-            <button class="btn btn-primary">Play</button>
+    <Show
+      when={getFile()}
+      fallback={
+        <div class="hero h-dvh">
+          <div class="hero-content text-center">
+            <div class="max-w-md">
+              <h1 class="text-5xl font-bold">Hello there</h1>
+              <p class="py-6">
+                Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda excepturi exercitationem quasi. In
+                deleniti eaque aut repudiandae et a id nisi.
+              </p>
+              <div class="flex justify-center gap-1">
+                <FileSelector
+                  class="btn btn-wide btn-primary"
+                  onSelect={handleFileSelect}
+                  onCleanUp={handleFileCleanUp}
+                />
+                <a class="btn btn-square btn-neutral">
+                  <img class="w-6" src="/logos/github-mark-white.svg" alt="Github" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
-      </Show>
-    </div>
+      }
+    >
+      <>
+        <div class="font-urbanist flex min-h-dvh flex-col gap-6 pb-[env(safe-area-inset-bottom)] lining-nums select-none">
+          <nav class="navbar from-base-100 via-base-100 sticky top-0 z-10 container mx-auto bg-gradient-to-b via-80% to-transparent">
+            <div class="flex-1">
+              <a class="btn btn-ghost btn-sm text-lg font-light tracking-wider sm:text-xl" href="">
+                Loudness Meter
+              </a>
+            </div>
+            <div class="flex-none">
+              <FileSelector class="btn btn-primary btn-sm" onSelect={handleFileSelect} onCleanUp={handleFileCleanUp} />
+            </div>
+          </nav>
+
+          <main class="container mx-auto flex min-h-0 min-w-0 flex-1 flex-col gap-6 p-4">
+            <div class="grid grid-cols-3 items-center">
+              <div class="flex flex-col items-center gap-3 justify-self-start sm:justify-self-center-safe">
+                <p class="text-xs font-light sm:text-sm">Loudness Range</p>
+                <p class="text-xl sm:text-6xl">
+                  <Show when={getSnapshot()} fallback={'-'} keyed={true}>
+                    {(snapshot) => {
+                      const value = snapshot.currentMetrics[0].loudnessRange;
+                      return value === Number.NEGATIVE_INFINITY ? '-' : value;
+                    }}
+                  </Show>
+                </p>
+                <p class="text-xs font-light">LRA</p>
+              </div>
+              <div class="flex flex-col items-center gap-3">
+                <p class="text-sm font-light">Integrated Loudness</p>
+                <p class="text-5xl sm:text-8xl">
+                  <Show when={getSnapshot()} fallback={'-'} keyed={true}>
+                    {(snapshot) => {
+                      const value = snapshot.currentMetrics[0].integratedLoudness;
+                      return value === Number.NEGATIVE_INFINITY ? '-' : value;
+                    }}
+                  </Show>
+                </p>
+                <p class="text-xs font-light">LUFS</p>
+              </div>
+              <div class="flex flex-col items-center gap-3 justify-self-end sm:justify-self-center-safe">
+                <p class="text-xs font-light sm:text-sm">True Peak Level</p>
+                <p class="text-xl sm:text-6xl">
+                  <Show when={getSnapshot()} fallback={'-'} keyed={true}>
+                    {(snapshot) => {
+                      const value = snapshot.currentMetrics[0].maximumTruePeakLevel;
+                      return value === Number.NEGATIVE_INFINITY ? '-' : value;
+                    }}
+                  </Show>
+                </p>
+                <p class="text-xs font-light">dBTP</p>
+              </div>
+            </div>
+
+            <div ref={(element) => (chartRef = element)} class="min-h-96 w-full">
+              {/* echarts */}
+            </div>
+
+            <div class="card card-border overflow-x-auto overscroll-none">
+              <table class="table-sm sm:table-md table text-nowrap">
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        id={createUniqueId()}
+                        type="checkbox"
+                        class="checkbox rounded-field checkbox-sm"
+                        disabled={getSnapshots().length === 0}
+                        onclick={handleTableRowClickAll}
+                      />
+                    </th>
+                    <th>Time</th>
+                    <th>Momentary</th>
+                    <th>Short-term</th>
+                    <th>Integrated</th>
+                    <th>Range</th>
+                    <th>Peak</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <For each={snapshotTable.getPageData()}>
+                    {(snapshot) => {
+                      const index = getSnapshots().indexOf(snapshot);
+
+                      return (
+                        <tr
+                          class={`${
+                            snapshotTableSelectedRange.isSelected(index) ? 'bg-base-200' : 'bg-base-100'
+                          } hover:bg-base-200 cursor-pointer`}
+                          onclick={() => handleTableRowClick(index)}
+                        >
+                          <th>
+                            <input
+                              id={createUniqueId()}
+                              type="checkbox"
+                              class="checkbox rounded-field checkbox-sm"
+                              checked={snapshotTableSelectedRange.isSelected(index)}
+                            />
+                          </th>
+                          <td>{snapshot.currentTime} ms</td>
+                          <td>{snapshot.currentMetrics[0].momentaryLoudness}</td>
+                          <td>{snapshot.currentMetrics[0].shortTermLoudness}</td>
+                          <td>{snapshot.currentMetrics[0].integratedLoudness}</td>
+                          <td>{snapshot.currentMetrics[0].loudnessRange}</td>
+                          <td>{snapshot.currentMetrics[0].maximumTruePeakLevel}</td>
+                        </tr>
+                      );
+                    }}
+                  </For>
+                </tbody>
+
+                <Show when={!getIsProccessFinish()}>
+                  <tfoot>
+                    <tr>
+                      <td colspan={7}>
+                        <Switch>
+                          <Match when={!getIsProccessing()}>
+                            <div role="alert" class="alert alert-horizontal">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-6"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25"
+                                />
+                              </svg>
+                              <div>
+                                <h3 class="font-bold">Pending</h3>
+                                <div class="text-xs">Select a audio file to start meter</div>
+                              </div>
+                            </div>
+                          </Match>
+                          <Match when={getIsProccessing()}>
+                            <div role="alert" class="alert alert-horizontal">
+                              <span class="loading loading-spinner loading-md"></span>
+                              <div>
+                                <h3 class="font-bold">Loading</h3>
+                                <div class="text-xs">Analyzing audio file...</div>
+                              </div>
+                            </div>
+                          </Match>
+                        </Switch>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </Show>
+              </table>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <p class="text-xs font-semibold sm:text-sm">Rows per page</p>
+                <select
+                  id={createUniqueId()}
+                  class="select select-sm sm:select-md w-fit"
+                  value={snapshotTable.getPageSize()}
+                  onChange={handleTablePageSizeChange}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+
+              <div class="flex gap-0.5">
+                <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.prev}>
+                  «
+                </button>
+                <button class="btn sm:btn-md btn-sm">Page {snapshotTable.getCurrentPage()}</button>
+                <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.next}>
+                  »
+                </button>
+              </div>
+            </div>
+          </main>
+        </div>
+
+        <Show when={false}>
+          <div class="fixed right-0 bottom-24 left-0 flex justify-center">
+            <div class="bg-neutral/5 rounded-box w-96 space-y-1 p-1 backdrop-blur-md">
+              <div class="badge badge-xs">{audioAnalyzer.getBuffer()?.sampleRate}Hz</div>
+              <div class="bg-neutral rounded-box p-1">
+                <button class="btn btn-square btn-sm btn-accent" type="button"></button>
+              </div>
+            </div>
+          </div>
+        </Show>
+      </>
+    </Show>
   );
 }
 

@@ -1,15 +1,16 @@
-import { mergeProps } from 'solid-js';
+import { createUniqueId, mergeProps } from 'solid-js';
 
 type FileSelectorProps = {
   onSelect: (file: File) => void;
-  onCleanUp: () => void;
+  onCleanUp?: () => void;
+  class: string;
 };
 
 function FileSelector(fileSelectorProps: FileSelectorProps) {
   const props = mergeProps(fileSelectorProps);
 
   function handleClick(_: Event) {
-    props.onCleanUp();
+    props?.onCleanUp?.();
   }
 
   function handleChange(event: Event) {
@@ -29,11 +30,18 @@ function FileSelector(fileSelectorProps: FileSelectorProps) {
   }
 
   return (
-    <label class="btn btn-sm btn-primary max-sm:btn-square">
+    <label class={props.class}>
       <p>
-        <span class="max-sm:hidden">Select File</span>
+        <span>Select File</span>
       </p>
-      <input type="file" accept="*" class="hidden" onClick={handleClick} onChange={handleChange} />
+      <input
+        id={createUniqueId()}
+        type="file"
+        accept="*"
+        class="hidden"
+        onClick={handleClick}
+        onChange={handleChange}
+      />
     </label>
   );
 }
