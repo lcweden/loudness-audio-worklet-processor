@@ -11,5 +11,7 @@
 
 html,
 body {
+  scrollbar-gutter: stable;
   overscroll-behavior: none;
+  scroll-behavior: smooth;
 }
