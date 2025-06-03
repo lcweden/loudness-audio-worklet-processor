@@ -17,6 +17,18 @@ function createChart() {
     }
   }
 
+  function setIsLoading(isLoading: boolean, options?: {}) {
+    const chart = getChart();
+
+    if (chart) {
+      if (isLoading) {
+        chart.showLoading('default', options);
+      } else {
+        chart.hideLoading();
+      }
+    }
+  }
+
   createEffect(() => {
     const chart = getChart();
 
@@ -42,7 +54,7 @@ function createChart() {
     }
   });
 
-  return { init, setOption };
+  return { init, setOption, setIsLoading };
 }
 
 export { createChart };
