@@ -3,13 +3,13 @@ import { AudioLoudnessSnapshot, Metrics } from '../../types';
 import { createChart } from '../composables';
 
 type LoudnessSnapshotsChartProps = {
-  getIsProccessing: Accessor<boolean>;
-  getIsProccessFinish: Accessor<boolean>;
+  getIsProcessing: Accessor<boolean>;
+  getIsProcessFinish: Accessor<boolean>;
   getSnapshots: Accessor<AudioLoudnessSnapshot[]>;
 };
 
 function LoudnessSnapshotsChart(loudnessSnapshotsChartProps: LoudnessSnapshotsChartProps) {
-  const { getSnapshots, getIsProccessFinish, getIsProccessing } = mergeProps(loudnessSnapshotsChartProps);
+  const { getSnapshots, getIsProcessFinish, getIsProcessing } = mergeProps(loudnessSnapshotsChartProps);
   const snapshotChart = createChart();
   const legends: Array<[string, keyof Metrics]> = [
     ['Integrated', 'integratedLoudness'],
@@ -21,19 +21,18 @@ function LoudnessSnapshotsChart(loudnessSnapshotsChartProps: LoudnessSnapshotsCh
 
   createEffect(() => {
     const snapshots = getSnapshots();
-    const isProccessFinish = getIsProccessFinish();
+    const isProccessFinish = getIsProcessFinish();
 
     if (isProccessFinish && snapshots) {
       snapshotChart.setIsLoading(false);
       snapshotChart.setOption({
         tooltip: { trigger: 'axis' },
-        legend: { data: legends.map(([key]) => key) },
         xAxis: {
           type: 'category',
           data: snapshots.map((snapshot) => snapshot.currentTime),
-          name: 'Time (s)',
+          name: 'Time',
         },
-        yAxis: { type: 'value', name: 'Loudness (LUFS)', min: 'dataMin', max: 'dataMax' },
+        yAxis: { type: 'value', name: 'Loudness', min: 'dataMin', max: 'dataMax' },
         series: legends.map(([key, value]) => ({
           name: key,
           data: snapshots.map((snapshot) => {
@@ -44,13 +43,15 @@ function LoudnessSnapshotsChart(loudnessSnapshotsChartProps: LoudnessSnapshotsCh
           smooth: true,
           emphasis: { focus: 'series' },
           lineStyle: { width: 4 },
+          sampling: 'lttb',
+          dataZoom: [{ type: 'inside', throttle: 50 }, { type: 'slider' }],
         })),
       });
     }
   });
 
   createEffect(() => {
-    const isProccessing = getIsProccessing();
+    const isProccessing = getIsProcessing();
 
     if (isProccessing) {
       snapshotChart.setIsLoading(true, {
