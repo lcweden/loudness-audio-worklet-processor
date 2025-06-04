@@ -16,7 +16,7 @@ if (mode) {
     publicDir: '../public',
     build: {
       outDir: '../dist',
-      emptyOutDir: false,
+      emptyOutDir: true,
     },
     base: isDev ? undefined : '/loudness-audio-worklet-processor/',
   });

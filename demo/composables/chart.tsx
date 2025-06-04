@@ -1,5 +1,10 @@
-import * as echarts from 'echarts';
+import { LineChart } from 'echarts/charts';
+import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
+
+echarts.use([LineChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer]);
 
 function createChart() {
   const [getChart, setChart] = createSignal<echarts.ECharts>();
