@@ -74,7 +74,7 @@ function MeterPage(meterPageProps: MeterPageProps) {
             </a>
           </div>
           <div class="flex-none">
-            <FileSelector class="btn btn-wide btn-primary" onchange={handleFileSelect} accept="*audio, *video" />
+            <FileSelector class="btn btn-wide btn-primary" onchange={handleFileSelect} accept="audio/*, video/*" />
           </div>
         </nav>
 
