@@ -35,7 +35,7 @@ function HeroPage(heroPageProps: HeroPageProps) {
           <div class="flex w-full flex-col items-center gap-2">
             <div class="flex w-full justify-center gap-1">
               <FileSelector class="btn btn-wide btn-primary" onchange={handleFileSelect} accept="audio/*, video/*">
-                <p class="flex items-center gap-2 font-sans font-light">
+                <p class="flex items-center gap-2 font-sans">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"

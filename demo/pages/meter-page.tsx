@@ -78,7 +78,7 @@ function MeterPage(meterPageProps: MeterPageProps) {
             onchange={handleFileSelect}
             accept="audio/*, video/*"
           >
-            <p class="flex items-center gap-2 font-sans font-light">
+            <p class="flex items-center gap-2 font-sans">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
