@@ -18,9 +18,9 @@ function HeroPage(heroPageProps: HeroPageProps) {
   }
 
   return (
-    <div class="hero h-dvh">
+    <div class="hero font-urbanist h-dvh">
       <div class="hero-content text-center">
-        <div class="max-w-md space-y-4">
+        <div class="max-w-md space-y-6">
           <a
             class="btn btn-sm rounded-full font-light tracking-wide shadow"
             href="loudness.worklet.js"
@@ -29,18 +29,37 @@ function HeroPage(heroPageProps: HeroPageProps) {
             Download JS File
           </a>
           <h1 class="text-5xl font-bold">Loudness Meter</h1>
-          <p>
-            Real-time audio loudness analysis for the Web.
-            <br />
-            ITU-R BS.1770-5 compliant. Open source. Easy integration.
+          <p class="text-base-content/50 font-mono">
+            Real-time audio loudness analysis in browser, following ITU-R BS.1770-5.
           </p>
-          <div class="flex justify-center gap-1">
-            <FileSelector class="btn btn-wide btn-primary" onchange={handleFileSelect} accept="audio/*, video/*" />
-            <a class="btn btn-square btn-neutral">
-              <img class="w-6" src="./logos/github-mark-white.svg" alt="Github" />
-            </a>
+          <div class="flex w-full flex-col items-center gap-2">
+            <div class="flex w-full justify-center gap-1">
+              <FileSelector class="btn btn-wide btn-primary" onchange={handleFileSelect} accept="audio/*, video/*">
+                <p class="flex items-center gap-2 font-sans font-light">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-5"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Select File
+                </p>
+              </FileSelector>
+              <a
+                class="btn btn-square btn-neutral"
+                href="https://github.com/lcweden/loudness-audio-worklet-processor"
+                target="_blank"
+                rel="noopener noreferrer external"
+              >
+                <img class="w-6" src="./logos/github-mark-white.svg" alt="Github" />
+              </a>
+            </div>
+            <p class="text-xs text-gray-400">Select an audio or video file to analyze loudness locally.</p>
           </div>
-          <p class="text-xs text-gray-400">Select an audio or video file to analyze loudness locally.</p>
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ function App() {
 
   return (
     <Show when={getSelectedFile()} fallback={<HeroPage setFile={setSelectedFile} />}>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense>
         <MeterPage getFile={getSelectedFile} setFile={setSelectedFile} />
       </Suspense>
     </Show>
