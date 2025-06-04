@@ -1,15 +1,13 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
 
+const mode = import.meta.env.MODE as 'development' | 'production';
+const audioWorkletUrl = mode === 'production' ? 'loudness.worklet.js' : new URL('../../src/index.ts', import.meta.url);
+
 function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
   const [getBuffer, setBuffer] = createSignal<AudioBuffer>();
-  const audioWorkletModuleUrl = new URL('../../src/index.ts', import.meta.url);
-
   let audioContext: AudioContext;
 
-  async function process(
-    file: File,
-    onended?: (this: AudioScheduledSourceNode, ev: Event) => any
-  ): Promise<void> {
+  async function process(file: File, onended?: (this: AudioScheduledSourceNode, ev: Event) => any): Promise<void> {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -19,7 +17,7 @@ function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
       const { numberOfChannels, length, sampleRate } = audioBuffer;
       const offlineAudioContext = new OfflineAudioContext(numberOfChannels, length, sampleRate);
 
-      await offlineAudioContext.audioWorklet.addModule(audioWorkletModuleUrl);
+      await offlineAudioContext.audioWorklet.addModule(audioWorkletUrl);
 
       const source = new AudioBufferSourceNode(offlineAudioContext, { buffer: audioBuffer });
       const worklet = new AudioWorkletNode(offlineAudioContext, 'loudness-processor');
