@@ -30,6 +30,18 @@ function createPagination<T>(data?: T[], options?: { pageSize: number }) {
     return data.slice(start, start + pageSize);
   });
 
+  function first() {
+    if (getCurrentPage() !== 1) {
+      return setCurrentPage(1);
+    }
+  }
+
+  function last() {
+    if (getCurrentPage() !== getTotalPages()) {
+      return setCurrentPage(getTotalPages());
+    }
+  }
+
   function prev() {
     if (getCurrentPage() !== 1) {
       return setCurrentPage(getCurrentPage() - 1);
@@ -50,6 +62,8 @@ function createPagination<T>(data?: T[], options?: { pageSize: number }) {
     setPageSize,
     getTotalPages,
     getPageData,
+    first,
+    last,
     prev,
     next,
   };

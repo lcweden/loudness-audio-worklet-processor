@@ -6,12 +6,14 @@ type LoudnessSnapshotsTableProps = {
   getIsProcessing: Accessor<boolean>;
   getIsProcessFinish: Accessor<boolean>;
   getSnapshots: Accessor<AudioLoudnessSnapshot[]>;
-  range: ReturnType<typeof createRange>;
+  snapshotSelectedRange: ReturnType<typeof createRange>;
 };
 
 function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTableProps) {
-  const { getSnapshots, getIsProcessFinish, getIsProcessing, range } = mergeProps(loudnessSnapshotsTableProps);
+  const { getSnapshots, getIsProcessFinish, getIsProcessing, snapshotSelectedRange } =
+    mergeProps(loudnessSnapshotsTableProps);
   const snapshotTable = createPagination<AudioLoudnessSnapshot>();
+  let checkboxRef: HTMLInputElement;
 
   function handleTablePageSizeChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -20,7 +22,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
   }
 
   function handleTableRowClick(index: number) {
-    range.select(index);
+    snapshotSelectedRange.select(index);
   }
 
   function handleTableRowClickAll(event: Event) {
@@ -32,18 +34,29 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
     }
 
     if (checkbox.checked) {
-      range.selectAll(getSnapshots().length);
+      snapshotSelectedRange.selectAll(getSnapshots().length);
     } else {
-      range.clear();
+      snapshotSelectedRange.clear();
     }
   }
 
   createEffect(() => {
     const isProccessFinish = getIsProcessFinish();
     const snapshots = getSnapshots();
+    const selectedRange = snapshotSelectedRange.getRange();
 
     if (isProccessFinish && snapshots) {
       snapshotTable.setData(snapshots);
+    }
+
+    if (selectedRange) {
+      const count = selectedRange[1] - selectedRange[0] + 1;
+
+      if (count === snapshots.length) {
+        checkboxRef.checked = true;
+      } else {
+        checkboxRef.checked = false;
+      }
     }
   });
 
@@ -55,6 +68,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
             <tr>
               <th>
                 <input
+                  ref={(element) => (checkboxRef = element)}
                   id={createUniqueId()}
                   type="checkbox"
                   class="checkbox rounded-field checkbox-sm"
@@ -80,7 +94,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
                   return (
                     <tr
                       class={`${
-                        range.isSelected(index) ? 'bg-base-200' : 'bg-base-100'
+                        snapshotSelectedRange.isSelected(index) ? 'bg-base-200' : 'bg-base-100'
                       } hover:bg-base-200 cursor-pointer`}
                       onclick={() => handleTableRowClick(index)}
                     >
@@ -89,7 +103,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
                           id={createUniqueId()}
                           type="checkbox"
                           class="checkbox rounded-field checkbox-sm"
-                          checked={range.isSelected(index)}
+                          checked={snapshotSelectedRange.isSelected(index)}
                         />
                       </th>
                       <td>{snapshot.currentTime} ms</td>
@@ -153,12 +167,52 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
         </div>
 
         <div class="flex gap-0.5">
+          <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.first}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+              <path
+                fill-rule="evenodd"
+                d="M10.72 11.47a.75.75 0 0 0 0 1.06l7.5 7.5a.75.75 0 1 0 1.06-1.06L12.31 12l6.97-6.97a.75.75 0 0 0-1.06-1.06l-7.5 7.5Z"
+                clip-rule="evenodd"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M4.72 11.47a.75.75 0 0 0 0 1.06l7.5 7.5a.75.75 0 1 0 1.06-1.06L6.31 12l6.97-6.97a.75.75 0 0 0-1.06-1.06l-7.5 7.5Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
           <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.prev}>
-            «
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+              <path
+                fill-rule="evenodd"
+                d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z"
+                clip-rule="evenodd"
+              />
+            </svg>
           </button>
           <button class="btn sm:btn-md btn-sm">Page {snapshotTable.getCurrentPage()}</button>
           <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.next}>
-            »
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+              <path
+                fill-rule="evenodd"
+                d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.last}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+              <path
+                fill-rule="evenodd"
+                d="M13.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L11.69 12 4.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
+                clip-rule="evenodd"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M19.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06L17.69 12l-6.97-6.97a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
+                clip-rule="evenodd"
+              />
+            </svg>
           </button>
         </div>
       </div>
