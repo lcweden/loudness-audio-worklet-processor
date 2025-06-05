@@ -1,8 +1,8 @@
-import { Accessor, createEffect, createMemo, createSignal, mergeProps, Setter, Show } from 'solid-js';
+import { Accessor, createEffect, createMemo, createSignal, mergeProps, Setter } from 'solid-js';
 import { AudioLoudnessSnapshot } from '../../types';
 import { FileSelector } from '../components';
 import { createAudioAnalysis, createRange } from '../composables';
-import { LoudnessMetricStats, LoudnessSnapshotsChart, LoudnessSnapshotsTable } from '../containers';
+import { LoudnessMetricStats, LoudnessSnapshotsChart, LoudnessSnapshotsTable, SnapshotPlayer } from '../containers';
 
 type MeterPageProps = {
   getFile: Accessor<File | undefined>;
@@ -85,7 +85,7 @@ function MeterPage(meterPageProps: MeterPageProps) {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="size-5"
+                class="size-4"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
@@ -105,21 +105,17 @@ function MeterPage(meterPageProps: MeterPageProps) {
             getIsProcessing={getIsProcessing}
             getIsProcessFinish={getIsProcessFinish}
             getSnapshots={getSnapshots}
-            range={snapshotSelectedRange}
+            snapshotSelectedRange={snapshotSelectedRange}
           />
         </main>
       </div>
 
-      <Show when={snapshotSelectedRange.getRange()}>
-        <div class="fixed right-0 bottom-24 left-0 flex justify-center">
-          <div class="bg-neutral/5 rounded-box w-96 space-y-1 p-1 backdrop-blur-md">
-            <div class="badge badge-xs">{audioAnalyzer.getBuffer()?.sampleRate}Hz</div>
-            <div class="bg-neutral rounded-box p-1">
-              <button class="btn btn-square btn-sm btn-accent" type="button"></button>
-            </div>
-          </div>
-        </div>
-      </Show>
+      <SnapshotPlayer
+        getFile={getFile}
+        getSnapshots={getSnapshots}
+        getBuffer={audioAnalyzer.getBuffer}
+        snapshotSelectedRange={snapshotSelectedRange}
+      />
     </>
   );
 }
