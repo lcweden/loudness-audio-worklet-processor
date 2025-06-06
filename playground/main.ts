@@ -1,4 +1,4 @@
-import { LoudnessProcessorData } from '../types';
+import { AudioLoudnessSnapshot } from '../types';
 
 const audioContext = new AudioContext({ sampleRate: 48000 });
 
@@ -26,7 +26,7 @@ input.addEventListener('change', async (event) => {
   sourceNode.connect(workletNode).connect(offlineAudioBuffer.destination);
   sourceNode.start();
 
-  workletNode.port.onmessage = (event: MessageEvent<LoudnessProcessorData>) => {
+  workletNode.port.onmessage = (event: MessageEvent<AudioLoudnessSnapshot>) => {
     console.log(event.data);
   };
 
