@@ -2,6 +2,7 @@ import { Accessor, createEffect, createUniqueId, For, Match, mergeProps, Show, S
 import { AudioLoudnessSnapshot } from '../../types';
 import { createPagination, createRange } from '../composables';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons';
+import { replaceIfEqual } from '../utils';
 
 type LoudnessSnapshotsTableProps = {
   getIsProcessing: Accessor<boolean>;
@@ -50,8 +51,6 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
       snapshotTable.setData(snapshots);
     }
 
-    console.log(selectedRange);
-
     if (selectedRange) {
       const count = selectedRange[1] - selectedRange[0] + 1;
 
@@ -82,7 +81,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
                 />
               </th>
               <th>Time</th>
-              <th>Momentary</th>
+              <th>Momentary </th>
               <th>Short-term</th>
               <th>Integrated</th>
               <th>Range</th>
@@ -112,11 +111,11 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
                         />
                       </th>
                       <td>{snapshot.currentTime} ms</td>
-                      <td>{snapshot.currentMetrics[0].momentaryLoudness}</td>
-                      <td>{snapshot.currentMetrics[0].shortTermLoudness}</td>
-                      <td>{snapshot.currentMetrics[0].integratedLoudness}</td>
-                      <td>{snapshot.currentMetrics[0].loudnessRange}</td>
-                      <td>{snapshot.currentMetrics[0].maximumTruePeakLevel}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].momentaryLoudness, -Infinity, '-')}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].shortTermLoudness, -Infinity, '-')}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].integratedLoudness, -Infinity, '-')}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].loudnessRange, -Infinity, '-')}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].maximumTruePeakLevel, -Infinity, '-')}</td>
                     </tr>
                   );
                 }}
