@@ -29,9 +29,9 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
 
   function handleTableRowClickAll(event: Event) {
     const checkbox = event.target as HTMLInputElement;
-    const snapshotTable = getSnapshots();
+    const snapshots = getSnapshots();
 
-    if (!snapshotTable) {
+    if (!snapshots) {
       return;
     }
 
