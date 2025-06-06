@@ -3,6 +3,7 @@ import { AudioLoudnessSnapshot } from '../../types';
 import { FileSelector } from '../components';
 import { createAudioAnalysis, createRange } from '../composables';
 import { LoudnessMetricStats, LoudnessSnapshotsChart, LoudnessSnapshotsTable, SnapshotPlayer } from '../containers';
+import { PlusIcon } from '../icons';
 
 type MeterPageProps = {
   getFile: Accessor<File | undefined>;
@@ -74,21 +75,12 @@ function MeterPage(meterPageProps: MeterPageProps) {
             </a>
           </div>
           <FileSelector
-            class="btn btn-square sm:btn-wide btn-primary"
+            class="btn max-sm:btn-square btn-md btn-primary"
             onchange={handleFileSelect}
             accept="audio/*, video/*"
           >
             <p class="flex items-center gap-2 font-sans">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-4"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
+              <PlusIcon />
               <span class="hidden sm:inline">Select File</span>
             </p>
           </FileSelector>

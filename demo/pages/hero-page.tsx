@@ -1,5 +1,6 @@
 import { mergeProps, Setter } from 'solid-js';
 import { FileSelector } from '../components';
+import { PlusIcon } from '../icons';
 
 type HeroPageProps = {
   setFile: Setter<File | undefined>;
@@ -36,16 +37,7 @@ function HeroPage(heroPageProps: HeroPageProps) {
             <div class="flex w-full justify-center gap-1">
               <FileSelector class="btn btn-wide btn-primary" onchange={handleFileSelect} accept="audio/*, video/*">
                 <p class="flex items-center gap-2 font-sans">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-4"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
+                  <PlusIcon />
                   Select File
                 </p>
               </FileSelector>

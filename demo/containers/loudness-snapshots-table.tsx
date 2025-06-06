@@ -1,6 +1,7 @@
 import { Accessor, createEffect, createUniqueId, For, Match, mergeProps, Show, Switch } from 'solid-js';
 import { AudioLoudnessSnapshot } from '../../types';
 import { createPagination, createRange } from '../composables';
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons';
 
 type LoudnessSnapshotsTableProps = {
   getIsProcessing: Accessor<boolean>;
@@ -49,6 +50,8 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
       snapshotTable.setData(snapshots);
     }
 
+    console.log(selectedRange);
+
     if (selectedRange) {
       const count = selectedRange[1] - selectedRange[0] + 1;
 
@@ -57,11 +60,13 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
       } else {
         checkboxRef.checked = false;
       }
+    } else {
+      checkboxRef.checked = false;
     }
   });
 
   return (
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-4">
       <div class="card card-border overflow-x-auto overscroll-none">
         <table class="table-sm sm:table-md table text-nowrap">
           <thead>
@@ -155,7 +160,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
           <p class="text-xs font-semibold sm:text-sm">Rows per page</p>
           <select
             id={createUniqueId()}
-            class="select select-sm sm:select-md w-fit"
+            class="select select-sm sm:select-md w-fit cursor-pointer"
             value={snapshotTable.getPageSize()}
             onChange={handleTablePageSizeChange}
           >
@@ -168,51 +173,17 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
 
         <div class="flex gap-0.5">
           <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.first}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-              <path
-                fill-rule="evenodd"
-                d="M10.72 11.47a.75.75 0 0 0 0 1.06l7.5 7.5a.75.75 0 1 0 1.06-1.06L12.31 12l6.97-6.97a.75.75 0 0 0-1.06-1.06l-7.5 7.5Z"
-                clip-rule="evenodd"
-              />
-              <path
-                fill-rule="evenodd"
-                d="M4.72 11.47a.75.75 0 0 0 0 1.06l7.5 7.5a.75.75 0 1 0 1.06-1.06L6.31 12l6.97-6.97a.75.75 0 0 0-1.06-1.06l-7.5 7.5Z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            <ChevronDoubleLeftIcon />
           </button>
           <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.prev}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-              <path
-                fill-rule="evenodd"
-                d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            <ChevronLeftIcon />
           </button>
           <button class="btn sm:btn-md btn-sm">Page {snapshotTable.getCurrentPage()}</button>
           <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.next}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-              <path
-                fill-rule="evenodd"
-                d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            <ChevronRightIcon />
           </button>
           <button class="btn sm:btn-md btn-sm btn-square" onclick={snapshotTable.last}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-              <path
-                fill-rule="evenodd"
-                d="M13.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L11.69 12 4.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
-                clip-rule="evenodd"
-              />
-              <path
-                fill-rule="evenodd"
-                d="M19.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06L17.69 12l-6.97-6.97a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            <ChevronDoubleRightIcon />
           </button>
         </div>
       </div>
