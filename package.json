@@ -1,7 +1,7 @@
 {
   "name": "loudness-audio-worklet-processor",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "VITE_MODE=playground vite",
