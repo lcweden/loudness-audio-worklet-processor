@@ -60,10 +60,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
             K_WEIGHTING_BIQUAD_COEFFICIENTS.highshelf.a,
             K_WEIGHTING_BIQUAD_COEFFICIENTS.highshelf.b
           ),
-          new BiquadraticFilter(
-            K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.a,
-            K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.b
-          ),
+          new BiquadraticFilter(K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.a, K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.b),
         ];
         this.truePeakFilters[i][j] ??= FIR_COEFFICIENTS.map(
           (coefficients) => new FiniteImpulseResponseFilter(coefficients)
@@ -90,10 +87,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
           const maximumTruePeak = Math.max(...truePeaks);
           const maximumTruePeakLevel = 20 * Math.log10(maximumTruePeak) + 12.04;
 
-          this.metrics[i].maximumTruePeakLevel = Math.max(
-            this.metrics[i].maximumTruePeakLevel,
-            maximumTruePeakLevel
-          );
+          this.metrics[i].maximumTruePeakLevel = Math.max(this.metrics[i].maximumTruePeakLevel, maximumTruePeakLevel);
         }
       }
     }
@@ -105,10 +99,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(momentaryWindowSize);
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(shortTermWindowSize);
 
-      for (let j = 0; j < weightedInputs[0][0].length; j++) {
+      for (let j = 0; j < weightedInputs[i][0].length; j++) {
         let sumOfSquaredChannelWeightedSamples = 0;
 
-        for (let k = 0; k < weightedInputs[0].length; k++) {
+        for (let k = 0; k < weightedInputs[i].length; k++) {
           sumOfSquaredChannelWeightedSamples += weightedInputs[i][k][j] ** 2;
         }
 
@@ -165,23 +159,22 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
 
       const sortedLoudnesses = this.shortTermLoudnessHistory[i].toSorted((a, b) => a - b);
-      const [lowerPercentile, upperPercentile] = [
-        LOUDNESS_RANGE_LOWER_PERCENTILE,
-        LOUDNESS_RANGE_UPPER_PERCENTILE,
-      ].map((percentile) => {
-        const lowerIndex = Math.floor(percentile * (sortedLoudnesses.length - 1));
-        const upperIndex = Math.ceil(percentile * (sortedLoudnesses.length - 1));
+      const [lowerPercentile, upperPercentile] = [LOUDNESS_RANGE_LOWER_PERCENTILE, LOUDNESS_RANGE_UPPER_PERCENTILE].map(
+        (percentile) => {
+          const lowerIndex = Math.floor(percentile * (sortedLoudnesses.length - 1));
+          const upperIndex = Math.ceil(percentile * (sortedLoudnesses.length - 1));
 
-        if (upperIndex === lowerIndex) {
-          return sortedLoudnesses[lowerIndex];
+          if (upperIndex === lowerIndex) {
+            return sortedLoudnesses[lowerIndex];
+          }
+
+          return (
+            sortedLoudnesses[lowerIndex] +
+            (sortedLoudnesses[upperIndex] - sortedLoudnesses[lowerIndex]) *
+              (percentile * (sortedLoudnesses.length - 1) - lowerIndex)
+          );
         }
-
-        return (
-          sortedLoudnesses[lowerIndex] +
-          (sortedLoudnesses[upperIndex] - sortedLoudnesses[lowerIndex]) *
-            (percentile * (sortedLoudnesses.length - 1) - lowerIndex)
-        );
-      });
+      );
 
       const loudnessRange = upperPercentile - lowerPercentile;
 
