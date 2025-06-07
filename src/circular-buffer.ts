@@ -42,8 +42,27 @@ class CircularBuffer<T> {
     return this.#buffer[this.#head];
   }
 
-  slice(start?: number, end?: number): T[] {
-    return this.#buffer.slice(start, end);
+  slice(start: number = 0, end: number = this.#size): T[] {
+    if (start < 0) {
+      start = 0;
+    }
+
+    if (end > this.#size) {
+      end = this.#size;
+    }
+
+    if (start >= end) {
+      return [];
+    }
+
+    const result: T[] = [];
+
+    for (let i = start; i < end; i++) {
+      const index = (this.#head + i) % this.#capacity;
+      result.push(this.#buffer[index]);
+    }
+
+    return result;
   }
 
   isEmpty(): boolean {
