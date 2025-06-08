@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "VITE_MODE=playground vite",
     "demo": "VITE_MODE=demo vite",
+    "test": "vitest",
     "build": "tsc -b && VITE_MODE=demo vite build && vite build",
     "preview": "VITE_MODE=demo vite preview",
     "format": "prettier --write ."
@@ -23,6 +24,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "~5.7.2",
     "vite": "^6.3.1",
-    "vite-plugin-solid": "^2.11.6"
+    "vite-plugin-solid": "^2.11.6",
+    "vitest": "^3.2.2"
   }
 }
