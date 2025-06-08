@@ -1,7 +1,7 @@
 {
   "name": "Loudness Meter",
   "short_name": "Loudness Meter",
-  "description": "A demo project that implements the loudness audio worklet processor.",
+  "description": "A real-time loudness meter based on ITU-R BS.1770-5, implemented with Web Audio API AudioWorkletProcessor.",
   "lang": "en",
   "dir": "ltr",
   "categories": ["audio", "utilities", "meter"],
