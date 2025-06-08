@@ -7,18 +7,41 @@ self.addEventListener('activate', () => {
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  if (event.request.method !== 'GET') {
+    return;
+  }
 
-      return fetch(event.request).then((networkResponse) => {
-        return caches.open('runtime').then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
+  if (new URL(event.request.url).origin !== location.origin) {
+    return;
+  }
+
+  event.respondWith(
+    caches
+      .match(event.request)
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(event.request)
+          .then((networkResponse) => {
+            return caches.open('v1').then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            });
+          })
+          .catch(() => {
+            return new Response('Network error occurred', {
+              status: 408,
+              statusText: 'Network error',
+            });
+          });
+      })
+      .catch(() => {
+        return new Response('Cache error occurred', {
+          status: 500,
+          statusText: 'Cache error',
         });
-      });
-    })
+      })
   );
 });
