@@ -47,12 +47,12 @@ class LoudnessProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
-    const weightedInputs: Float32Array[][] = [];
+    const kWeightedInputs: Float32Array[][] = [];
 
     for (let i = 0; i < inputs.length; i++) {
       this.kWeightingFilters[i] ??= [];
       this.truePeakFilters[i] ??= [];
-      weightedInputs[i] = [];
+      kWeightedInputs[i] = [];
 
       for (let j = 0; j < inputs[i].length; j++) {
         this.kWeightingFilters[i][j] ??= [
@@ -65,16 +65,13 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         this.truePeakFilters[i][j] ??= FIR_COEFFICIENTS.map(
           (coefficients) => new FiniteImpulseResponseFilter(coefficients)
         );
-        weightedInputs[i][j] = new Float32Array(inputs[i][j].length);
+        kWeightedInputs[i][j] = new Float32Array(inputs[i][j].length);
 
         for (let k = 0; k < inputs[i][j].length; k++) {
           const [highshelfFilter, highpassFilter] = this.kWeightingFilters[i][j];
           const highshelfOutput = highshelfFilter.process(inputs[i][j][k]);
           const highpassOutput = highpassFilter.process(highshelfOutput);
-          const kWeightedSample = highpassOutput;
-          const channelWeightedSample = kWeightedSample * CHANNEL_WEIGHT_FACTORS[j];
-
-          weightedInputs[i][j][k] = channelWeightedSample;
+          kWeightedInputs[i][j][k] = highpassOutput;
 
           const attenuation = Math.pow(10, -12.04 / 20);
           const attenuatedSample = inputs[i][j][k] * attenuation;
@@ -92,18 +89,23 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
     }
 
-    for (let i = 0; i < weightedInputs.length; i++) {
+    for (let i = 0; i < kWeightedInputs.length; i++) {
       const momentaryWindowSize = Math.round(sampleRate * MOMENTARY_WINDOW_SEC);
       const shortTermWindowSize = Math.round(sampleRate * SHORT_TERM_WINDOW_SEC);
 
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(momentaryWindowSize);
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(shortTermWindowSize);
 
-      for (let j = 0; j < weightedInputs[i][0].length; j++) {
+      const channelNumber = inputs[i].length as keyof typeof CHANNEL_WEIGHT_FACTORS;
+      const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[channelNumber] ?? {});
+
+      for (let j = 0; j < kWeightedInputs[i][0].length; j++) {
         let sumOfSquaredChannelWeightedSamples = 0;
 
-        for (let k = 0; k < weightedInputs[i].length; k++) {
-          sumOfSquaredChannelWeightedSamples += weightedInputs[i][k][j] ** 2;
+        for (let k = 0; k < kWeightedInputs[i].length; k++) {
+          const sampleEnergy = kWeightedInputs[i][k][j] ** 2;
+          const channelWeight = channelWeights[k] ?? 1.0;
+          sumOfSquaredChannelWeightedSamples += sampleEnergy * channelWeight;
         }
 
         this.momentaryEnergyBuffers[i].push(sumOfSquaredChannelWeightedSamples);
