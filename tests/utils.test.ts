@@ -1,41 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { replaceIfEqual } from '../../demo/utils/index';
-import { calculateLufs } from '../../src/utils';
-
-describe('calculateLufs', () => {
-  it('should return a finite number for positive energy', () => {
-    expect(typeof calculateLufs(1)).toBe('number');
-    expect(isFinite(calculateLufs(1))).toBe(true);
-  });
-
-  it('should calculate LUFS correctly for known values', () => {
-    // For energy = 1, LUFS = -0.691 + 10 * log10(1) = -0.691
-    expect(calculateLufs(1)).toBeCloseTo(-0.691, 5);
-    // For energy = 10, LUFS = -0.691 + 10 * log10(10) = -0.691 + 10 = 9.309
-    expect(calculateLufs(10)).toBeCloseTo(9.309, 5);
-    // For energy = 0.1, LUFS = -0.691 + 10 * log10(0.1) = -0.691 - 10 = -10.691
-    expect(calculateLufs(0.1)).toBeCloseTo(-10.691, 5);
-  });
-
-  it('should handle zero energy by using Number.EPSILON', () => {
-    const result = calculateLufs(0);
-    const expected = -0.691 + 10 * Math.log10(Number.EPSILON);
-    expect(result).toBeCloseTo(expected, 5);
-  });
-
-  it('should handle negative energy by using Number.EPSILON', () => {
-    const result = calculateLufs(-5);
-    const expected = -0.691 + 10 * Math.log10(Number.EPSILON);
-    expect(result).toBeCloseTo(expected, 5);
-  });
-
-  it('should handle extremely large energy values', () => {
-    const largeEnergy = 1e12;
-    const result = calculateLufs(largeEnergy);
-    const expected = -0.691 + 10 * Math.log10(largeEnergy);
-    expect(result).toBeCloseTo(expected, 5);
-  });
-});
+import { replaceIfEqual } from '../demo/utils/index';
 
 describe('replaceIfEqual', () => {
   it('returns the replacement when value is strictly equal to compare (number)', () => {

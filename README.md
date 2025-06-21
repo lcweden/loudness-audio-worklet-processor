@@ -8,8 +8,6 @@ Download pre-built file [loudness.worklet.js](https://lcweden.github.io/loudness
 
 ## Usage
 
-### Basic Example
-
 1. Register the processor in your audio context:
 
    ```javascript
@@ -40,6 +38,60 @@ Download pre-built file [loudness.worklet.js](https://lcweden.github.io/loudness
      ]
    }
    ```
+
+## Validation
+
+### ITU-R BS.2217
+
+| file                                                                                                       | measurement | channels |     |
+| ---------------------------------------------------------------------------------------------------------- | ----------- | -------- | --- |
+| [1770Comp_2_RelGateTest](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010030ZIPM.zip)               | -10.0 LKFS  | 2        | [x] |
+| [1770Comp_2_AbsGateTest](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010029ZIPM.zip)               | -69.5 LKFS  | 2        | [x] |
+| [1770Comp_2_24LKFS_25Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010016ZIPM.zip)           | -24.0 LKFS  | 2        | []  |
+| [1770Comp_2_24LKFS_100Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010017ZIPM.zip)          | -24.0 LKFS  | 2        | []  |
+| [1770Comp_2_24LKFS_500Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010018ZIPM.zip)          | -24.0 LKFS  | 2        | []  |
+| [1770Comp_2_24LKFS_1000Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010019ZIPM.zip)         | -24.0 LKFS  | 2        | []  |
+| [1770Comp_2_24LKFS_2000Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010020ZIPM.zip)         | -24.0 LKFS  | 2        | []  |
+| [1770Comp_2_24LKFS_10000Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010021ZIPM.zip)        | -24.0 LKFS  | 2        | []  |
+| [1770Comp_2_23LKFS_25Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010003ZIPM.zip)           | -23.0 LKFS  | 2        | []  |
+| [1770Comp_2_23LKFS_100Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010004ZIPM.zip)          | -23.0 LKFS  | 2        | []  |
+| [1770Comp_2_23LKFS_500Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010005ZIPM.zip)          | -23.0 LKFS  | 2        | []  |
+| [1770Comp_2_23LKFS_1000Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010006ZIPM.zip)         | -23.0 LKFS  | 2        | []  |
+| [1770Comp_2_23LKFS_2000Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010007ZIPM.zip)         | -23.0 LKFS  | 2        | []  |
+| [1770Comp_2_23LKFS_10000Hz_2ch](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010008ZIPM.zip)        | -23.0 LKFS  | 2        | []  |
+| [1770Comp_2_18LKFS_FrequencySweep](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010002ZIPM.zip)     | -18.0 LKFS  | 1        | []  |
+| [1770Comp_2_24LKFS_SummingTest](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010028ZIPM.zip)        | -24.0 LKFS  | 6        | []  |
+| [1770Comp_2_23LKFS_SummingTest](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010015ZIPM.zip)        | -23.0 LKFS  | 6        | []  |
+| [1770Comp_2_24LKFS_ChannelCheckLeft](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010023ZIPM.zip)   | -24.0 LKFS  | 6        | []  |
+| [1770Comp_2_24LKFS_ChannelCheckRight](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010026ZIPM.zip)  | -24.0 LKFS  | 6        | []  |
+| [1770Comp_2_24LKFS_ChannelCheckCentre](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010022ZIPM.zip) | -24.0 LKFS  | 6        | []  |
+| [1770Comp_2_24LKFS_ChannelCheckLFE](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010024ZIPM.zip)    | -inf LKFS   | 6        | []  |
+| [1770Comp_2_24LKFS_ChannelCheckLs](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010025ZIPM.zip)     | -24.0 LKFS  | 6        | []  |
+| [1770Comp_2_24LKFS_ChannelCheckRs](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010027ZIPM.zip)     | -24.0 LKFS  | 6        | []  |
+| [1770Comp_2_23LKFS_ChannelCheckLeft](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010010ZIPM.zip)   | -23.0 LKFS  | 6        | []  |
+| [1770Comp_2_23LKFS_ChannelCheckRight](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010013ZIPM.zip)  | -23.0 LKFS  | 6        | []  |
+| [1770Comp_2_23LFKS_ChannelCheckCentre](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010009ZIPM.zip) | -23.0 LKFS  | 6        | []  |
+| [1770Comp_2_23LKFS_ChannelCheckLFE](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010011ZIPM.zip)    | -inf LKFS   | 6        | []  |
+| [1770Comp_2_23LKFS_ChannelCheckLs](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010012ZIPM.zip)     | -23.0 LKFS  | 6        | []  |
+| [1770Comp_2_23LKFS_ChannelCheckRs](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010014ZIPM.zip)     | -23.0 LKFS  | 6        | []  |
+| [1770-2 Conf 6ch VinCntr-24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010032ZIPM.zip)       | -24.0 LKFS  | 6        | []  |
+| [1770-2 Conf 6ch VinL+R-24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010034ZIPM.zip)        | -24.0 LKFS  | 6        | []  |
+| [1770-2 Conf 6ch VinL-R-C-24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010036ZIPM.zip)      | -24.0 LKFS  | 6        | []  |
+| [1770-2 Conf Stereo VinL+R-24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010040ZIPM.zip)     | -24.0 LKFS  | 2        | []  |
+| [1770-2 Conf Mono Voice+Music-24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010038ZIPM.zip)  | -24.0 LKFS  | 1        | []  |
+| [1770-2 Conf 6ch VinCntr-23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010031ZIPM.zip)       | -23.0 LKFS  | 6        | []  |
+| [1770-2 Conf 6ch VinL+R-23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010033ZIPM.zip)        | -23.0 LKFS  | 6        | []  |
+| [1770-2 Conf 6ch VinL-R-C-23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010035ZIPM.zip)      | -23.0 LKFS  | 6        | []  |
+| [1770-2 Conf Stereo VinL+R-23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010039ZIPM.zip)     | -23.0 LKFS  | 2        | []  |
+| [1770-2 Conf Mono Voice+Music-23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010037ZIPM.zip)  | -23.0 LKFS  | 1        | []  |
+| [1770Conf-8channels_24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010041ZIPM.zip)            | -24.0 LKFS  | 8        | []  |
+| [1770Conf-8channels_23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010042ZIPM.zip)            | -23.0 LKFS  | 8        | []  |
+| [1770Conf-10channels_24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010043ZIPM.zip)           | -24.0 LKFS  | 10       | []  |
+| [1770Conf-10channels_23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010044ZIPM.zip)           | -23.0 LKFS  | 10       | []  |
+| [1770Conf-12channels_24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010045ZIPM.zip)           | -24.0 LKFS  | 12       | []  |
+| [1770Conf-12channels_23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010046ZIPM.zip)           | -23.0 LKFS  | 12       | []  |
+| [1770Conf-24channels_24LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010047ZIPM.zip)           | -24.0 LKFS  | 24       | []  |
+| [1770Conf-24channels_23LKFS](http://www.itu.int/dms_pub/itu-r/oth/11/02/R11020000010048ZIPM.zip)           | -23.0 LKFS  | 24       | []  |
 
 ## Acknowledgments
 
