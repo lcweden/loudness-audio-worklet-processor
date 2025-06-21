@@ -2,66 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
     <title>Playground</title>
   </head>
   <body>
-    <h1>Playground</h1>
-    <section>
-      <h2>Select An Audio Or Video File</h2>
-      <input type="file" accept="audio/*, video/*" />
-      <div id="file-info"></div>
-    </section>
-    <section>
-      <h2>Loudness Measurement</h2>
-      <dl id="loudness-dl">
-        <dt>Momentary Loudness (400ms, LUFS)</dt>
-        <dd id="momentary">-</dd>
-        <dt>Short-Term Loudness (3s, LUFS)</dt>
-        <dd id="shortterm">-</dd>
-        <dt>Integrated Loudness (LUFS)</dt>
-        <dd id="integrated">-</dd>
-        <dt>Loudness Range (LRA, LU)</dt>
-        <dd id="range">-</dd>
-        <dt>Maximum True Peak Level (dBTP)</dt>
-        <dd id="truepeak">-</dd>
-      </dl>
-      <details>
-        <summary>Show Raw Data</summary>
-        <pre id="snapshot"></pre>
-        <hr />
-        <p>Open devtool to see more</p>
-      </details>
-    </section>
-    <section>
-      <h2>ITU-R BS.1770-5 Reference</h2>
-      <ul>
-        <li><strong>LUFS</strong>: Loudness Units relative to Full Scale, standardized loudness measure.</li>
-        <li><strong>Momentary</strong>: 400ms sliding window loudness.</li>
-        <li><strong>Short-Term</strong>: 3s sliding window loudness.</li>
-        <li><strong>Integrated</strong>: Overall loudness over the program.</li>
-        <li><strong>Loudness Range (LRA)</strong>: Statistical measure of loudness variation.</li>
-        <li><strong>True Peak</strong>: Maximum sample-accurate peak, considering inter-sample peaks.</li>
-      </ul>
-      <p>
-        <a href="https://www.itu.int/rec/R-REC-BS.1770/en" target="_blank" rel="noopener"
-          >ITU-R BS.1770-5 Official Recommendation</a
-        >
-      </p>
-    </section>
-    <section>
-      <h2>ITU-R BS.1770 Reference</h2>
-      <p>
-        This Report contains a table of compliance test files and related information for verifying that a meter meets
-        the specifications within Recommendation ITU-R BS.1770.
-      </p>
-      <p>
-        <a href="https://www.itu.int/pub/R-REP-BS.2217" target="_blank" rel="noopener">
-          Compliance material for Recommendation ITU-R BS.1770
-        </a>
-      </p>
-    </section>
-    <script type="module" src="/main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
   </body>
 </html>
