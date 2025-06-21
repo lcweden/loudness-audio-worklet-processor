@@ -1,6 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
+import fs from 'node:fs';
 import { defineConfig, UserConfig } from 'vite';
 import solid from 'vite-plugin-solid';
+import { version } from './package.json';
 
 const mode = process.env.VITE_MODE as 'demo' | 'playground';
 const isDev = (process.env.NODE_ENV as 'development' | 'production') === 'development';
@@ -34,6 +36,26 @@ if (mode) {
       emptyOutDir: false,
       copyPublicDir: false,
     },
+    plugins: [
+      (() => {
+        return {
+          name: '',
+          closeBundle: async () => {
+            const path = new URL('./dist/loudness.worklet.js', import.meta.url);
+            const file = fs.readFileSync(path, { encoding: 'utf-8' });
+            const banner = `
+/**
+ * @file loudness.worklet.js
+ * @version ${version}
+ * @author 
+ */
+`;
+
+            fs.writeFileSync(path, banner + '\r\n\r\n' + file, { encoding: 'utf-8' });
+          },
+        };
+      })(),
+    ],
   });
 }
 
