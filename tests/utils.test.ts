@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { replaceIfEqual } from '../../demo/utils/index';
-import { calculateLufs } from '../../src/utils';
+import { replaceIfEqual } from '../demo/utils/index';
+import { calculateLufs } from '../src/utils';
 
 describe('calculateLufs', () => {
   it('should return a finite number for positive energy', () => {
