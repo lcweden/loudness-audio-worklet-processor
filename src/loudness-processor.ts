@@ -15,7 +15,7 @@ import {
 import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
 
 /**
- * A class that implements the loudness algorithm as specified in ITU-R BS.1770-5.
+ * Loudness Algorithm Implementation (ITU-R BS.1770-5)
  *
  * @class
  * @extends AudioWorkletProcessor
