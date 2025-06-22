@@ -39,7 +39,7 @@ if (mode) {
     plugins: [
       (() => {
         return {
-          name: '',
+          name: 'add-banner',
           closeBundle: async () => {
             const path = new URL('./dist/loudness.worklet.js', import.meta.url);
             const file = fs.readFileSync(path, { encoding: 'utf-8' });
