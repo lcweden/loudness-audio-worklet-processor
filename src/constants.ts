@@ -9,7 +9,53 @@ const K_WEIGHTING_BIQUAD_COEFFICIENTS = {
   },
 };
 
-const CHANNEL_WEIGHT_FACTORS = [1.0, 1.0, 1.0, 0.0, 1.41, 1.41, 1.41, 1.41];
+const CHANNEL_WEIGHT_FACTORS = {
+  1: { mono: 1.0 },
+  2: { L: 1.0, R: 1.0 },
+  6: { L: 1.0, R: 1.0, C: 1.0, LFE: 0.0, Ls: 1.41, Rs: 1.41 },
+  8: { L: 1.0, R: 1.0, C: 1.0, LFE: 0.0, Lss: 1.41, Rss: 1.41, Lrs: 1.0, Rrs: 1.0 },
+  10: { L: 1.0, R: 1.0, C: 1.0, LFE: 0.0, Ls: 1.41, Rs: 1.41, Tfl: 1.0, Tfr: 1.0, Tbl: 1.0, Tbr: 1.0 },
+  12: {
+    L: 1.0,
+    R: 1.0,
+    C: 1.0,
+    LFE: 0.0,
+    Lss: 1.41,
+    Rss: 1.41,
+    Lrs: 1.0,
+    Rrs: 1.0,
+    Tfl: 1.0,
+    Tfr: 1.0,
+    Tbl: 1.0,
+    Tbr: 1.0,
+  },
+  24: {
+    FL: 1.41,
+    FR: 1.41,
+    FC: 1.0,
+    LFE1: 0.0,
+    BL: 1.0,
+    BR: 1.0,
+    FLc: 1.0,
+    FRc: 1.0,
+    BC: 1.0,
+    LFE2: 0.0,
+    SiL: 1.41,
+    SiR: 1.41,
+    TpFL: 1.0,
+    TpFR: 1.0,
+    TpFC: 1.0,
+    TpC: 1.0,
+    TpBL: 1.0,
+    TpBR: 1.0,
+    TpSiL: 1.0,
+    TpSiR: 1.0,
+    TpBC: 1.0,
+    BtFC: 1.0,
+    BtFL: 1.0,
+    BtFR: 1.0,
+  },
+};
 
 const MOMENTARY_WINDOW_SEC = 0.4;
 
@@ -18,10 +64,6 @@ const MOMENTARY_HOP_INTERVAL_SEC = 0.1;
 const SHORT_TERM_WINDOW_SEC = 3.0;
 
 const SHORT_TERM_HOP_INTERVAL_SEC = 0.1;
-
-const MIN_GATE_LOUDNESS = -70;
-
-const RELATIVE_GATE_OFFSET = -10;
 
 const LOUDNESS_RANGE_LOWER_PERCENTILE = 0.1;
 
@@ -56,11 +98,9 @@ export {
   K_WEIGHTING_BIQUAD_COEFFICIENTS,
   LOUDNESS_RANGE_LOWER_PERCENTILE,
   LOUDNESS_RANGE_UPPER_PERCENTILE,
-  MIN_GATE_LOUDNESS,
   MOMENTARY_HOP_INTERVAL_SEC,
   MOMENTARY_WINDOW_SEC,
   OVERSAMPLE_FACTOR,
-  RELATIVE_GATE_OFFSET,
   SHORT_TERM_HOP_INTERVAL_SEC,
   SHORT_TERM_WINDOW_SEC,
   TAPS,

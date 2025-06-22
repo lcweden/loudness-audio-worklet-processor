@@ -1,8 +1,17 @@
 {
   "name": "loudness-audio-worklet-processor",
-  "private": true,
   "version": "0.4.0",
+  "description": "An AudioWorkletProcessor implementing the loudness algorithm (ITU-R BS.1770-5).",
+  "private": true,
   "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "types/index.ts",
+  "license": "MIT",
+  "author": "lcweden",
+  "repository": {
+    "url": "https://github.com/lcweden/loudness-audio-worklet-processor"
+  },
   "scripts": {
     "dev": "VITE_MODE=playground vite",
     "demo": "VITE_MODE=demo vite",
