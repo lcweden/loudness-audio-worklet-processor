@@ -122,98 +122,98 @@ Supported channel counts: `1`,`2`,`6`,`8`,`10`,`12`,`24`
 The [ITU-R BS.2217](https://www.itu.int/pub/R-REP-BS.2217) test suite provides a table of compliance test files and related information for verifying that a meter
 meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.int/rec/R-REC-BS.1770).
 
-| file                                 | measurement | channels |     |
-| ------------------------------------ | ----------- | -------- | --- |
-| 1770Comp_2_RelGateTest               | -10.0 LKFS  | 2        | [x] |
-| 1770Comp_2_AbsGateTest               | -69.5 LKFS  | 2        | [x] |
-| 1770Comp_2_24LKFS_25Hz_2ch           | -24.0 LKFS  | 2        | [x] |
-| 1770Comp_2_24LKFS_100Hz_2ch          | -24.0 LKFS  | 2        | [x] |
-| 1770Comp_2_24LKFS_500Hz_2ch          | -24.0 LKFS  | 2        | [x] |
-| 1770Comp_2_24LKFS_1000Hz_2ch         | -24.0 LKFS  | 2        | [x] |
-| 1770Comp_2_24LKFS_2000Hz_2ch         | -24.0 LKFS  | 2        | [x] |
-| 1770Comp_2_24LKFS_10000Hz_2ch        | -24.0 LKFS  | 2        | [x] |
-| 1770Comp_2_23LKFS_25Hz_2ch           | -23.0 LKFS  | 2        | [x] |
-| 1770Comp_2_23LKFS_100Hz_2ch          | -23.0 LKFS  | 2        | [x] |
-| 1770Comp_2_23LKFS_500Hz_2ch          | -23.0 LKFS  | 2        | [x] |
-| 1770Comp_2_23LKFS_1000Hz_2ch         | -23.0 LKFS  | 2        | [x] |
-| 1770Comp_2_23LKFS_2000Hz_2ch         | -23.0 LKFS  | 2        | [x] |
-| 1770Comp_2_23LKFS_10000Hz_2ch        | -23.0 LKFS  | 2        | [x] |
-| 1770Comp_2_18LKFS_FrequencySweep     | -18.0 LKFS  | 1        | [x] |
-| 1770Comp_2_24LKFS_SummingTest        | -24.0 LKFS  | 6        | [x] |
-| 1770Comp_2_23LKFS_SummingTest        | -23.0 LKFS  | 6        | [x] |
-| 1770Comp_2_24LKFS_ChannelCheckLeft   | -24.0 LKFS  | 6        | [x] |
-| 1770Comp_2_24LKFS_ChannelCheckRight  | -24.0 LKFS  | 6        | [x] |
-| 1770Comp_2_24LKFS_ChannelCheckCentre | -24.0 LKFS  | 6        | [x] |
-| 1770Comp_2_24LKFS_ChannelCheckLFE    | -inf LKFS   | 6        | [x] |
-| 1770Comp_2_24LKFS_ChannelCheckLs     | -24.0 LKFS  | 6        | [x] |
-| 1770Comp_2_24LKFS_ChannelCheckRs     | -24.0 LKFS  | 6        | [x] |
-| 1770Comp_2_23LKFS_ChannelCheckLeft   | -23.0 LKFS  | 6        | [x] |
-| 1770Comp_2_23LKFS_ChannelCheckRight  | -23.0 LKFS  | 6        | [x] |
-| 1770Comp_2_23LFKS_ChannelCheckCentre | -23.0 LKFS  | 6        | [x] |
-| 1770Comp_2_23LKFS_ChannelCheckLFE    | -inf LKFS   | 6        | [x] |
-| 1770Comp_2_23LKFS_ChannelCheckLs     | -23.0 LKFS  | 6        | [x] |
-| 1770Comp_2_23LKFS_ChannelCheckRs     | -23.0 LKFS  | 6        | [x] |
-| 1770-2 Conf 6ch VinCntr-24LKFS       | -24.0 LKFS  | 6        | [x] |
-| 1770-2 Conf 6ch VinL+R-24LKFS        | -24.0 LKFS  | 6        | [x] |
-| 1770-2 Conf 6ch VinL-R-C-24LKFS      | -24.0 LKFS  | 6        | [x] |
-| 1770-2 Conf Stereo VinL+R-24LKFS     | -24.0 LKFS  | 2        | [x] |
-| 1770-2 Conf Mono Voice+Music-24LKFS  | -24.0 LKFS  | 1        | [x] |
-| 1770-2 Conf 6ch VinCntr-23LKFS       | -23.0 LKFS  | 6        | [x] |
-| 1770-2 Conf 6ch VinL+R-23LKFS        | -23.0 LKFS  | 6        | [x] |
-| 1770-2 Conf 6ch VinL-R-C-23LKFS      | -23.0 LKFS  | 6        | [x] |
-| 1770-2 Conf Stereo VinL+R-23LKFS     | -23.0 LKFS  | 2        | [x] |
-| 1770-2 Conf Mono Voice+Music-23LKFS  | -23.0 LKFS  | 1        | [x] |
-| 1770Conf-8channels_24LKFS            | -24.0 LKFS  | 8        | [x] |
-| 1770Conf-8channels_23LKFS            | -23.0 LKFS  | 8        | [x] |
-| 1770Conf-10channels_24LKFS           | -24.0 LKFS  | 10       | [x] |
-| 1770Conf-10channels_23LKFS           | -23.0 LKFS  | 10       | [x] |
-| 1770Conf-12channels_24LKFS           | -24.0 LKFS  | 12       | [x] |
-| 1770Conf-12channels_23LKFS           | -23.0 LKFS  | 12       | [x] |
-| 1770Conf-24channels_24LKFS           | -24.0 LKFS  | 24       | [x] |
-| 1770Conf-24channels_23LKFS           | -23.0 LKFS  | 24       | [x] |
+| file                                 | measurement | channels |                    |
+| ------------------------------------ | ----------- | -------- | ------------------ |
+| 1770Comp_2_RelGateTest               | -10.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_AbsGateTest               | -69.5 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_24LKFS_25Hz_2ch           | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_24LKFS_100Hz_2ch          | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_24LKFS_500Hz_2ch          | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_24LKFS_1000Hz_2ch         | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_24LKFS_2000Hz_2ch         | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_24LKFS_10000Hz_2ch        | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_23LKFS_25Hz_2ch           | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_23LKFS_100Hz_2ch          | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_23LKFS_500Hz_2ch          | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_23LKFS_1000Hz_2ch         | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_23LKFS_2000Hz_2ch         | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_23LKFS_10000Hz_2ch        | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770Comp_2_18LKFS_FrequencySweep     | -18.0 LKFS  | 1        | :white_check_mark: |
+| 1770Comp_2_24LKFS_SummingTest        | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_23LKFS_SummingTest        | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_24LKFS_ChannelCheckLeft   | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_24LKFS_ChannelCheckRight  | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_24LKFS_ChannelCheckCentre | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_24LKFS_ChannelCheckLFE    | -inf LKFS   | 6        | :white_check_mark: |
+| 1770Comp_2_24LKFS_ChannelCheckLs     | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_24LKFS_ChannelCheckRs     | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_23LKFS_ChannelCheckLeft   | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_23LKFS_ChannelCheckRight  | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_23LFKS_ChannelCheckCentre | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_23LKFS_ChannelCheckLFE    | -inf LKFS   | 6        | :white_check_mark: |
+| 1770Comp_2_23LKFS_ChannelCheckLs     | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770Comp_2_23LKFS_ChannelCheckRs     | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf 6ch VinCntr-24LKFS       | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf 6ch VinL+R-24LKFS        | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf 6ch VinL-R-C-24LKFS      | -24.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf Stereo VinL+R-24LKFS     | -24.0 LKFS  | 2        | :white_check_mark: |
+| 1770-2 Conf Mono Voice+Music-24LKFS  | -24.0 LKFS  | 1        | :white_check_mark: |
+| 1770-2 Conf 6ch VinCntr-23LKFS       | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf 6ch VinL+R-23LKFS        | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf 6ch VinL-R-C-23LKFS      | -23.0 LKFS  | 6        | :white_check_mark: |
+| 1770-2 Conf Stereo VinL+R-23LKFS     | -23.0 LKFS  | 2        | :white_check_mark: |
+| 1770-2 Conf Mono Voice+Music-23LKFS  | -23.0 LKFS  | 1        | :white_check_mark: |
+| 1770Conf-8channels_24LKFS            | -24.0 LKFS  | 8        | :white_check_mark: |
+| 1770Conf-8channels_23LKFS            | -23.0 LKFS  | 8        | :white_check_mark: |
+| 1770Conf-10channels_24LKFS           | -24.0 LKFS  | 10       | :white_check_mark: |
+| 1770Conf-10channels_23LKFS           | -23.0 LKFS  | 10       | :white_check_mark: |
+| 1770Conf-12channels_24LKFS           | -24.0 LKFS  | 12       | :white_check_mark: |
+| 1770Conf-12channels_23LKFS           | -23.0 LKFS  | 12       | :white_check_mark: |
+| 1770Conf-24channels_24LKFS           | -24.0 LKFS  | 24       | :white_check_mark: |
+| 1770Conf-24channels_23LKFS           | -23.0 LKFS  | 24       | :white_check_mark: |
 
 ### EBU TECH 3341 Minimum requirements test signals
 
 [EBU TECH 3341](https://tech.ebu.ch/publications/tech3341) defines minimum requirements and corresponding test signals for verifying momentary, short-term, and integrated loudness accuracy, gating behavior, and true-peak measurement.
 
-| file                                 | expected response and accepted tolerances                   |     |
-| ------------------------------------ | ----------------------------------------------------------- | --- |
-| seq-3341-1-16bit                     | M, S, I = −23.0 ±0.1 LUFS                                   | [x] |
-| seq-3341-2-16bit                     | M, S, I = −33.0 ±0.1 LUFS                                   | [x] |
-| seq-3341-3-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |
-| seq-3341-4-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |
-| seq-3341-5-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |
-| seq-3341-6-6channels-WAVEEX-16bit    | I = −23.0 ±0.1 LUFS                                         | [x] |
-| seq-3341-7_seq-3342-5-24bit          | I = −23.0 ±0.1 LUFS                                         | [x] |
-| seq-3341-2011-8_seq-3342-6-24bit-v02 | I = −23.0 ±0.1 LUFS                                         | [x] |
-| seq-3341-9-24bit                     | S = −23.0 ±0.1 LUFS, constant after 3 s                     | [x] |
-| seq-3341-10-\*-24bit                 | Max S = −23.0 ±0.1 LUFS, for each segment                   | [x] |
-| seq-3341-11-24bit                    | Max S = −38.0, −37.0, …, −19.0 ±0.1 LUFS, successive values | [x] |
-| seq-3341-12-24bit                    | M = −23.0 ±0.1 LUFS, constant after 1 s                     | [x] |
-| seq-3341-13-\*-24bit                 | Max M = −23.0 ±0.1 LUFS, for each segment                   | [x] |
-| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        | []  |
-| seq-3341-15-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
-| seq-3341-16-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
-| seq-3341-17-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
-| seq-3341-18-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
-| seq-3341-19-24bit                    | Max true-peak = +3.0 +0.2/−0.4 dBTP                         | [x] |
-| seq-3341-20-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
-| seq-3341-21-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
-| seq-3341-22-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
-| seq-3341-23-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
+| file                                 | expected response and accepted tolerances                   |                    |
+| ------------------------------------ | ----------------------------------------------------------- | ------------------ |
+| seq-3341-1-16bit                     | M, S, I = −23.0 ±0.1 LUFS                                   | :white_check_mark: |
+| seq-3341-2-16bit                     | M, S, I = −33.0 ±0.1 LUFS                                   | :white_check_mark: |
+| seq-3341-3-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-4-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-5-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-6-6channels-WAVEEX-16bit    | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-7_seq-3342-5-24bit          | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-2011-8_seq-3342-6-24bit-v02 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-9-24bit                     | S = −23.0 ±0.1 LUFS, constant after 3 s                     | :white_check_mark: |
+| seq-3341-10-\*-24bit                 | Max S = −23.0 ±0.1 LUFS, for each segment                   | :white_check_mark: |
+| seq-3341-11-24bit                    | Max S = −38.0, −37.0, …, −19.0 ±0.1 LUFS, successive values | :white_check_mark: |
+| seq-3341-12-24bit                    | M = −23.0 ±0.1 LUFS, constant after 1 s                     | :white_check_mark: |
+| seq-3341-13-\*-24bit                 | Max M = −23.0 ±0.1 LUFS, for each segment                   | :white_check_mark: |
+| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        |                    |
+| seq-3341-15-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-16-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-17-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-18-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-19-24bit                    | Max true-peak = +3.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-20-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
+| seq-3341-21-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
+| seq-3341-22-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
+| seq-3341-23-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
 
 ### EBU TECH 3342 Minimum requirements test signals
 
 [EBU TECH 3342](https://tech.ebu.ch/publications/tech3342) focuses on the measurement of loudness range.
 
-| file                                 | expected response and accepted tolerances |     |
-| ------------------------------------ | ----------------------------------------- | --- |
-| seq-3342-1-16bit                     | LRA = 10 ±1 LU                            | [x] |
-| seq-3342-2-16bit                     | LRA = 5 ±1 LU                             | [x] |
-| seq-3342-3-16bit                     | LRA = 20 ±1 LU                            | [x] |
-| seq-3342-4-16bit                     | LRA = 15 ±1 LU                            | [x] |
-| seq-3341-7_seq-3342-5-24bit          | LRA = 5 ±1 LU                             | [x] |
-| seq-3341-2011-8_seq-3342-6-24bit-v02 | LRA = 15 ±1 LU                            | [x] |
+| file                                 | expected response and accepted tolerances |                    |
+| ------------------------------------ | ----------------------------------------- | ------------------ |
+| seq-3342-1-16bit                     | LRA = 10 ±1 LU                            | :white_check_mark: |
+| seq-3342-2-16bit                     | LRA = 5 ±1 LU                             | :white_check_mark: |
+| seq-3342-3-16bit                     | LRA = 20 ±1 LU                            | :white_check_mark: |
+| seq-3342-4-16bit                     | LRA = 15 ±1 LU                            | :white_check_mark: |
+| seq-3341-7_seq-3342-5-24bit          | LRA = 5 ±1 LU                             | :white_check_mark: |
+| seq-3341-2011-8_seq-3342-6-24bit-v02 | LRA = 15 ±1 LU                            | :white_check_mark: |
 
 ## Acknowledgments
 
