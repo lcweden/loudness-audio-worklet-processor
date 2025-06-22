@@ -176,31 +176,31 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 
 [EBU TECH 3341](https://tech.ebu.ch/publications/tech3341) defines minimum requirements and corresponding test signals for verifying momentary, short-term, and integrated loudness accuracy, gating behavior, and true-peak measurement.
 
-| file                                 | expected response and accepted tolerances                   |     | note      |
-| ------------------------------------ | ----------------------------------------------------------- | --- | --------- |
-| seq-3341-1-16bit                     | M, S, I = −23.0 ±0.1 LUFS                                   | [x] |           |
-| seq-3341-2-16bit                     | M, S, I = −33.0 ±0.1 LUFS                                   | [x] |           |
-| seq-3341-3-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |           |
-| seq-3341-4-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |           |
-| seq-3341-5-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |           |
-| seq-3341-6-6channels-WAVEEX-16bit    | I = −23.0 ±0.1 LUFS                                         | [x] |           |
-| seq-3341-7_seq-3342-5-24bit          | I = −23.0 ±0.1 LUFS                                         | [x] |           |
-| seq-3341-2011-8_seq-3342-6-24bit-v02 | I = −23.0 ±0.1 LUFS                                         | [x] |           |
-| seq-3341-9-24bit                     | S = −23.0 ±0.1 LUFS, constant after 3 s                     | [x] |           |
-| seq-3341-10-\*-24bit                 | Max S = −23.0 ±0.1 LUFS, for each segment                   | []  | `pending` |
-| seq-3341-11-24bit                    | Max S = −38.0, −37.0, …, −19.0 ±0.1 LUFS, successive values | []  | `pending` |
-| seq-3341-12-24bit                    | M = −23.0 ±0.1 LUFS, constant after 1 s                     | []  | `pending` |
-| seq-3341-13-\*-24bit                 | Max M = −23.0 ±0.1 LUFS, for each segment                   | []  | `pending` |
-| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        | []  | `pending` |
-| seq-3341-15-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |           |
-| seq-3341-16-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |           |
-| seq-3341-17-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |           |
-| seq-3341-18-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |           |
-| seq-3341-19-24bit                    | Max true-peak = +3.0 +0.2/−0.4 dBTP                         | [x] |           |
-| seq-3341-20-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |           |
-| seq-3341-21-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |           |
-| seq-3341-22-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |           |
-| seq-3341-23-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |           |
+| file                                 | expected response and accepted tolerances                   |     |
+| ------------------------------------ | ----------------------------------------------------------- | --- |
+| seq-3341-1-16bit                     | M, S, I = −23.0 ±0.1 LUFS                                   | [x] |
+| seq-3341-2-16bit                     | M, S, I = −33.0 ±0.1 LUFS                                   | [x] |
+| seq-3341-3-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |
+| seq-3341-4-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |
+| seq-3341-5-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | [x] |
+| seq-3341-6-6channels-WAVEEX-16bit    | I = −23.0 ±0.1 LUFS                                         | [x] |
+| seq-3341-7_seq-3342-5-24bit          | I = −23.0 ±0.1 LUFS                                         | [x] |
+| seq-3341-2011-8_seq-3342-6-24bit-v02 | I = −23.0 ±0.1 LUFS                                         | [x] |
+| seq-3341-9-24bit                     | S = −23.0 ±0.1 LUFS, constant after 3 s                     | [x] |
+| seq-3341-10-\*-24bit                 | Max S = −23.0 ±0.1 LUFS, for each segment                   | [x] |
+| seq-3341-11-24bit                    | Max S = −38.0, −37.0, …, −19.0 ±0.1 LUFS, successive values | [x] |
+| seq-3341-12-24bit                    | M = −23.0 ±0.1 LUFS, constant after 1 s                     | [x] |
+| seq-3341-13-\*-24bit                 | Max M = −23.0 ±0.1 LUFS, for each segment                   | [x] |
+| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        | []  |
+| seq-3341-15-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
+| seq-3341-16-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
+| seq-3341-17-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
+| seq-3341-18-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | [x] |
+| seq-3341-19-24bit                    | Max true-peak = +3.0 +0.2/−0.4 dBTP                         | [x] |
+| seq-3341-20-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
+| seq-3341-21-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
+| seq-3341-22-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
+| seq-3341-23-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | [x] |
 
 ### EBU TECH 3342 Minimum requirements test signals
 
