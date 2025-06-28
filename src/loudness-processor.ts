@@ -67,9 +67,11 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
           const attenuation = Math.pow(10, -ATTENUATION_DB / 20);
           const attenuatedSample = input[i][j] * attenuation;
+          const oversample = sampleRate >= 96000 ? 2 : 4;
           const truePeaks = [];
 
-          for (const filter of truePeakFilter[i]) {
+          for (let index = 0; index < oversample; index++) {
+            const filter = truePeakFilter[i][index];
             truePeaks.push(Math.abs(filter.process(attenuatedSample)));
           }
 
