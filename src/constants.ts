@@ -9,7 +9,7 @@ const K_WEIGHTING_BIQUAD_COEFFICIENTS = {
   },
 };
 
-const CHANNEL_WEIGHT_FACTORS = {
+const CHANNEL_WEIGHT_FACTORS: { [channels: number]: Record<string, number> } = {
   1: { mono: 1.0 },
   2: { L: 1.0, R: 1.0 },
   6: { L: 1.0, R: 1.0, C: 1.0, LFE: 0.0, Ls: 1.41, Rs: 1.41 },
@@ -92,7 +92,10 @@ const FIR_COEFFICIENTS = [
   ],
 ];
 
+const ATTENUATION_DB = 12.04;
+
 export {
+  ATTENUATION_DB,
   CHANNEL_WEIGHT_FACTORS,
   FIR_COEFFICIENTS,
   K_WEIGHTING_BIQUAD_COEFFICIENTS,
