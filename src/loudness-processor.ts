@@ -18,6 +18,7 @@ import {
   TRUE_PEAK_COEFFICIENTS,
 } from './constants';
 import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
+import { Reference } from './reference';
 
 /**
  * Loudness Algorithm Implementation (ITU-R BS.1770-5)
@@ -26,106 +27,115 @@ import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
  * @extends AudioWorkletProcessor
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
+  metrics: Array<Metrics> = [];
   kWeightingFilters: Array<Array<Repeat<BiquadraticFilter, 2>>> = [];
   truePeakFilters: Array<Array<Repeat<FiniteImpulseResponseFilter, 4>>> = [];
-  momentarySampleAccumulators: Array<{ count: number }> = [];
   momentaryEnergyBuffers: Array<CircularBuffer<number>> = [];
+  momentaryEnergyRunningSums: Array<Reference<number>> = [];
+  momentarySampleAccumulators: Array<Reference<number>> = [];
   momentaryLoudnessHistories: Array<Array<number>> = [];
-  shortTermSampleAccumulators: Array<{ count: number }> = [];
   shortTermEnergyBuffers: Array<CircularBuffer<number>> = [];
+  shortTermEnergyRunningSums: Array<Reference<number>> = [];
   shortTermLoudnessHistories: Array<Array<number>> = [];
-  metrics: Array<Metrics> = [];
+  shortTermSampleAccumulators: Array<Reference<number>> = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
-    this.processPerInput(inputs, (input, metrics, context) => {
-      const { kWeightingFilter, truePeakFilter } = context;
+    this.#processPerInput(inputs, (channels, context) => {
+      const { kWeightingFilters, truePeakFilters } = context;
       const { momentaryEnergyBuffer, shortTermEnergyBuffer } = context;
-      const { momentaryLoudnessHistory, shortTermLoudnessHistory } = context;
+      const { momentaryEnergyRunningSum, shortTermEnergyRunningSum } = context;
       const { momentarySampleAccumulator, shortTermSampleAccumulator } = context;
-      const kWeightedInput = Array.from({ length: input.length }, (_, i) => new Float32Array(input[i].length));
-      const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[kWeightedInput.length] ?? {});
+      const { momentaryLoudnessHistory, shortTermLoudnessHistory } = context;
+      const { metrics } = context;
+      const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[channels.length] || new Object());
+      const channelCount = channels.length;
+      const sampleCount = channels[0].length;
 
-      for (let i = 0; i < input.length; i++) {
-        kWeightingFilter[i] ??= [
-          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highshelf.a, K_WEIGHTING_COEFFICIENTS.highshelf.b),
-          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b),
-        ];
+      for (let i = 0; i < sampleCount; i++) {
+        let sumOfSquaredChannelWeightedSamples = 0;
 
-        truePeakFilter[i] ??= [
-          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase0),
-          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase1),
-          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase2),
-          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3),
-        ];
-
-        for (let j = 0; j < input[i].length; j++) {
-          const [highshelfFilter, highpassFilter] = kWeightingFilter[i];
-          const highshelfOutput = highshelfFilter.process(input[i][j]);
-          kWeightedInput[i][j] = highpassFilter.process(highshelfOutput);
+        for (let j = 0; j < channelCount; j++) {
+          const [highshelfFilter, highpassFilter] = kWeightingFilters[j];
+          const highshelfOutput = highshelfFilter.process(channels[j][i]);
+          const kWeightedSample = highpassFilter.process(highshelfOutput);
+          const sampleEnergy = kWeightedSample ** 2;
+          const channelWeight = channelWeights[j] ?? 1.0;
 
           const attenuation = Math.pow(10, -ATTENUATION_DB / 20);
-          const attenuatedSample = input[i][j] * attenuation;
+          const attenuatedSample = channels[j][i] * attenuation;
           const oversample = sampleRate >= 96000 ? 2 : 4;
           const truePeaks = [];
 
-          for (let index = 0; index < oversample; index++) {
-            const filter = truePeakFilter[i][index];
+          for (let k = 0; k < oversample; k++) {
+            const filter = truePeakFilters[j][k];
             truePeaks.push(Math.abs(filter.process(attenuatedSample)));
           }
 
           const maximumTruePeak = Math.max(...truePeaks);
           const maximumTruePeakLevel = 20 * Math.log10(maximumTruePeak) + ATTENUATION_DB;
+          const previousMaximumTruePeakLevel = metrics.maximumTruePeakLevel;
 
-          metrics.maximumTruePeakLevel = Math.max(metrics.maximumTruePeakLevel, maximumTruePeakLevel);
-        }
-      }
+          metrics.maximumTruePeakLevel = Math.max(previousMaximumTruePeakLevel, maximumTruePeakLevel);
 
-      for (let i = 0; i < kWeightedInput[0].length; i++) {
-        let sumOfSquaredChannelWeightedSamples = 0;
-
-        for (let j = 0; j < kWeightedInput.length; j++) {
-          const sampleEnergy = kWeightedInput[j][i] ** 2;
-          const channelWeight = channelWeights[j] ?? 1.0;
           sumOfSquaredChannelWeightedSamples += sampleEnergy * channelWeight;
         }
 
-        momentaryEnergyBuffer.push(sumOfSquaredChannelWeightedSamples);
-        shortTermEnergyBuffer.push(sumOfSquaredChannelWeightedSamples);
+        const energy = sumOfSquaredChannelWeightedSamples;
+
+        const previousMomentaryEnergy = momentaryEnergyBuffer.peek() ?? 0;
+        const previousMomentaryEnergyForSum = momentaryEnergyBuffer.isFull() ? previousMomentaryEnergy : 0;
+
+        momentaryEnergyRunningSum.set(momentaryEnergyRunningSum.get() + energy - previousMomentaryEnergyForSum);
+        momentaryEnergyBuffer.push(energy);
+
+        const previousShortTermEnergy = shortTermEnergyBuffer.peek() ?? 0;
+        const previousShortTermEnergyForSum = shortTermEnergyBuffer.isFull() ? previousShortTermEnergy : 0;
+
+        shortTermEnergyRunningSum.set(shortTermEnergyRunningSum.get() + energy - previousShortTermEnergyForSum);
+        shortTermEnergyBuffer.push(energy);
+
+        if (momentaryEnergyBuffer.isFull()) {
+          const meanEnergy = momentaryEnergyRunningSum.get() / momentaryEnergyBuffer.capacity;
+          const momentaryLoudness = this.#energyToLoudness(meanEnergy);
+
+          metrics.momentaryLoudness = momentaryLoudness;
+          metrics.maximumMomentaryLoudness = Math.max(metrics.maximumMomentaryLoudness, momentaryLoudness);
+        }
       }
+
+      momentarySampleAccumulator.set(momentarySampleAccumulator.get() + sampleCount);
+      shortTermSampleAccumulator.set(shortTermSampleAccumulator.get() + sampleCount);
 
       const momentaryHopSize = Math.round(sampleRate * MOMENTARY_HOP_INTERVAL_SEC);
       const shortTermHopSize = Math.round(sampleRate * SHORT_TERM_HOP_INTERVAL_SEC);
 
-      while (momentarySampleAccumulator.count >= momentaryHopSize) {
+      while (momentarySampleAccumulator.get() >= momentaryHopSize) {
         if (momentaryEnergyBuffer.isFull()) {
-          const energies = momentaryEnergyBuffer.slice();
-          const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+          const meanEnergy = momentaryEnergyRunningSum.get() / momentaryEnergyBuffer.capacity;
           const momentaryLoudness = this.#energyToLoudness(meanEnergy);
 
           momentaryLoudnessHistory.push(momentaryLoudness);
-          metrics.momentaryLoudness = momentaryLoudness;
-          metrics.maximumMomentaryLoudness = Math.max(metrics.maximumMomentaryLoudness, momentaryLoudness);
         }
 
-        momentarySampleAccumulator.count -= momentaryHopSize;
+        momentarySampleAccumulator.set(momentarySampleAccumulator.get() - momentaryHopSize);
       }
 
-      while (shortTermSampleAccumulator.count >= shortTermHopSize) {
+      while (shortTermSampleAccumulator.get() >= shortTermHopSize) {
         if (shortTermEnergyBuffer.isFull()) {
-          const energies = shortTermEnergyBuffer.slice();
-          const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+          const meanEnergy = shortTermEnergyRunningSum.get() / shortTermEnergyBuffer.capacity;
           const shortTermLoudness = this.#energyToLoudness(meanEnergy);
 
-          shortTermLoudnessHistory.push(shortTermLoudness);
           metrics.shortTermLoudness = shortTermLoudness;
           metrics.maximumShortTermLoudness = Math.max(metrics.maximumShortTermLoudness, shortTermLoudness);
+
+          shortTermLoudnessHistory.push(shortTermLoudness);
         }
 
-        shortTermSampleAccumulator.count -= shortTermHopSize;
+        shortTermSampleAccumulator.set(shortTermSampleAccumulator.get() - shortTermHopSize);
       }
 
       if (momentaryLoudnessHistory.length > 2) {
@@ -188,51 +198,55 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
     });
 
-    for (let i = 0; i < outputs.length; i++) {
-      for (let j = 0; j < outputs[i].length; j++) {
-        outputs[i][j].set(inputs[i][j]);
-      }
-    }
+    this.#passThrough(inputs, outputs);
 
-    this.port.postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+    this.#postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
 
     return true;
   }
 
-  processPerInput(
+  #processPerInput(
     inputs: Float32Array[][],
     process: (
-      input: Float32Array[],
-      metrics: Metrics,
+      channels: Float32Array[],
       context: {
-        kWeightingFilter: Repeat<BiquadraticFilter, 2>[];
-        truePeakFilter: Repeat<FiniteImpulseResponseFilter, 4>[];
-        momentarySampleAccumulator: { count: number };
+        metrics: Metrics;
+        kWeightingFilters: Array<Repeat<BiquadraticFilter, 2>>;
+        truePeakFilters: Array<Repeat<FiniteImpulseResponseFilter, 4>>;
         momentaryEnergyBuffer: CircularBuffer<number>;
+        momentaryEnergyRunningSum: Reference<number>;
+        momentarySampleAccumulator: Reference<number>;
         momentaryLoudnessHistory: Array<number>;
-        shortTermSampleAccumulator: { count: number };
         shortTermEnergyBuffer: CircularBuffer<number>;
+        shortTermEnergyRunningSum: Reference<number>;
         shortTermLoudnessHistory: Array<number>;
+        shortTermSampleAccumulator: Reference<number>;
       }
     ) => void
-  ) {
+  ): void {
     this.kWeightingFilters.length = inputs.length;
     this.truePeakFilters.length = inputs.length;
+    this.momentaryEnergyRunningSums.length = inputs.length;
+    this.momentarySampleAccumulators.length = inputs.length;
     this.momentaryEnergyBuffers.length = inputs.length;
+    this.momentaryLoudnessHistories.length = inputs.length;
+    this.shortTermEnergyRunningSums.length = inputs.length;
+    this.shortTermSampleAccumulators.length = inputs.length;
     this.shortTermEnergyBuffers.length = inputs.length;
     this.shortTermLoudnessHistories.length = inputs.length;
-    this.momentaryLoudnessHistories.length = inputs.length;
     this.metrics.length = inputs.length;
 
     for (let i = 0; i < inputs.length; i++) {
-      if (!inputs[i].length) continue;
+      if (!inputs[i] || !inputs[i].length || !inputs[i][0].length) continue;
 
-      this.kWeightingFilters[i] ??= new Array();
-      this.truePeakFilters[i] ??= new Array();
-      this.momentarySampleAccumulators[i] ??= { count: 0 };
+      this.kWeightingFilters[i] ??= [];
+      this.truePeakFilters[i] ??= [];
+      this.momentaryEnergyRunningSums[i] ??= new Reference(0);
+      this.momentarySampleAccumulators[i] ??= new Reference(0);
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
       this.momentaryLoudnessHistories[i] ??= new Array();
-      this.shortTermSampleAccumulators[i] ??= { count: 0 };
+      this.shortTermEnergyRunningSums[i] ??= new Reference(0);
+      this.shortTermSampleAccumulators[i] ??= new Reference(0);
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
       this.shortTermLoudnessHistories[i] ??= new Array();
       this.metrics[i] ??= {
@@ -245,23 +259,49 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         loudnessRange: Number.NEGATIVE_INFINITY,
       };
 
-      this.momentarySampleAccumulators[i].count += inputs[0][0].length;
-      this.shortTermSampleAccumulators[i].count += inputs[0][0].length;
-
       this.kWeightingFilters[i].length = inputs[i].length;
       this.truePeakFilters[i].length = inputs[i].length;
 
-      process(inputs[i], this.metrics[i], {
-        kWeightingFilter: this.kWeightingFilters[i],
-        truePeakFilter: this.truePeakFilters[i],
-        momentarySampleAccumulator: this.momentarySampleAccumulators[i],
+      for (let j = 0; j < inputs[i].length; j++) {
+        this.kWeightingFilters[i][j] ??= [
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highshelf.a, K_WEIGHTING_COEFFICIENTS.highshelf.b),
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b),
+        ];
+
+        this.truePeakFilters[i][j] ??= [
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase0),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase1),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase2),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3),
+        ];
+      }
+
+      process(inputs[i], {
+        metrics: this.metrics[i],
+        kWeightingFilters: this.kWeightingFilters[i],
+        truePeakFilters: this.truePeakFilters[i],
         momentaryEnergyBuffer: this.momentaryEnergyBuffers[i],
+        momentaryEnergyRunningSum: this.momentaryEnergyRunningSums[i],
+        momentarySampleAccumulator: this.momentarySampleAccumulators[i],
         momentaryLoudnessHistory: this.momentaryLoudnessHistories[i],
-        shortTermSampleAccumulator: this.shortTermSampleAccumulators[i],
         shortTermEnergyBuffer: this.shortTermEnergyBuffers[i],
+        shortTermEnergyRunningSum: this.shortTermEnergyRunningSums[i],
         shortTermLoudnessHistory: this.shortTermLoudnessHistories[i],
+        shortTermSampleAccumulator: this.shortTermSampleAccumulators[i],
       });
     }
+  }
+
+  #passThrough(inputs: Float32Array[][], outputs: Float32Array[][]): void {
+    for (let i = 0; i < outputs.length; i++) {
+      for (let j = 0; j < outputs[i].length; j++) {
+        outputs[i][j].set(inputs[i][j]);
+      }
+    }
+  }
+
+  #postMessage(message?: any): void {
+    this.port.postMessage(message);
   }
 
   #energyToLoudness(energy: number): number {
