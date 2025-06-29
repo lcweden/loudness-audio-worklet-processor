@@ -29,9 +29,11 @@ class LoudnessProcessor extends AudioWorkletProcessor {
   lastTime: number = 0;
   kWeightingFilters: Array<Array<Repeat<BiquadraticFilter, 2>>> = [];
   truePeakFilters: Array<Array<Repeat<FiniteImpulseResponseFilter, 4>>> = [];
+  momentarySampleAccumulators: Array<{ count: number }> = [];
   momentaryEnergyBuffers: Array<CircularBuffer<number>> = [];
-  shortTermEnergyBuffers: Array<CircularBuffer<number>> = [];
   momentaryLoudnessHistories: Array<Array<number>> = [];
+  shortTermSampleAccumulators: Array<{ count: number }> = [];
+  shortTermEnergyBuffers: Array<CircularBuffer<number>> = [];
   shortTermLoudnessHistories: Array<Array<number>> = [];
   metrics: Array<Metrics> = [];
 
@@ -43,7 +45,8 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     this.processPerInput(inputs, (input, metrics, context) => {
       const { kWeightingFilter, truePeakFilter } = context;
       const { momentaryEnergyBuffer, shortTermEnergyBuffer } = context;
-      const { shortTermLoudnessHistory, momentaryLoudnessHistory } = context;
+      const { momentaryLoudnessHistory, shortTermLoudnessHistory } = context;
+      const { momentarySampleAccumulator, shortTermSampleAccumulator } = context;
       const kWeightedInput = Array.from({ length: input.length }, (_, i) => new Float32Array(input[i].length));
       const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[kWeightedInput.length] ?? {});
 
@@ -95,13 +98,35 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         shortTermEnergyBuffer.push(sumOfSquaredChannelWeightedSamples);
       }
 
-      if (momentaryEnergyBuffer.isFull() && currentFrame % Math.round(sampleRate * MOMENTARY_HOP_INTERVAL_SEC) === 0) {
-        const energies = momentaryEnergyBuffer.slice();
-        const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
-        const momentaryLoudness = this.#energyToLoudness(meanEnergy);
+      momentarySampleAccumulator.count += input[0].length;
+      shortTermSampleAccumulator.count += input[0].length;
 
-        momentaryLoudnessHistory.push(momentaryLoudness);
-        metrics.momentaryLoudness = momentaryLoudness;
+      const momentaryHopSize = Math.round(sampleRate * MOMENTARY_HOP_INTERVAL_SEC);
+      const shortTermHopSize = Math.round(sampleRate * SHORT_TERM_HOP_INTERVAL_SEC);
+
+      while (momentarySampleAccumulator.count >= momentaryHopSize) {
+        if (momentaryEnergyBuffer.isFull()) {
+          const energies = momentaryEnergyBuffer.slice();
+          const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+          const momentaryLoudness = this.#energyToLoudness(meanEnergy);
+          momentaryLoudnessHistory.push(momentaryLoudness);
+          metrics.momentaryLoudness = momentaryLoudness;
+        }
+
+        momentarySampleAccumulator.count -= momentaryHopSize;
+      }
+
+      while (shortTermSampleAccumulator.count >= shortTermHopSize) {
+        if (shortTermEnergyBuffer.isFull()) {
+          const energies = shortTermEnergyBuffer.slice();
+          const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+          const shortTermLoudness = this.#energyToLoudness(meanEnergy);
+
+          shortTermLoudnessHistory.push(shortTermLoudness);
+          metrics.shortTermLoudness = shortTermLoudness;
+        }
+
+        shortTermSampleAccumulator.count -= shortTermHopSize;
       }
 
       if (momentaryLoudnessHistory.length > 2) {
@@ -124,15 +149,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
             metrics.integratedLoudness = integratedLoudness;
           }
         }
-      }
-
-      if (shortTermEnergyBuffer.isFull() && currentFrame % Math.round(sampleRate * SHORT_TERM_HOP_INTERVAL_SEC) === 0) {
-        const energies = shortTermEnergyBuffer.slice();
-        const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
-        const shortTermLoudness = this.#energyToLoudness(meanEnergy);
-
-        shortTermLoudnessHistory.push(shortTermLoudness);
-        metrics.shortTermLoudness = shortTermLoudness;
       }
 
       if (shortTermLoudnessHistory.length > 2) {
@@ -195,10 +211,12 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       context: {
         kWeightingFilter: Repeat<BiquadraticFilter, 2>[];
         truePeakFilter: Repeat<FiniteImpulseResponseFilter, 4>[];
+        momentarySampleAccumulator: { count: number };
         momentaryEnergyBuffer: CircularBuffer<number>;
+        momentaryLoudnessHistory: Array<number>;
+        shortTermSampleAccumulator: { count: number };
         shortTermEnergyBuffer: CircularBuffer<number>;
         shortTermLoudnessHistory: Array<number>;
-        momentaryLoudnessHistory: Array<number>;
       }
     ) => void
   ) {
@@ -207,10 +225,12 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     for (let i = 0; i < inputs.length; i++) {
       this.kWeightingFilters[i] ??= [];
       this.truePeakFilters[i] ??= [];
+      this.momentarySampleAccumulators[i] ??= { count: 0 };
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
+      this.momentaryLoudnessHistories[i] ??= [];
+      this.shortTermSampleAccumulators[i] ??= { count: 0 };
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
       this.shortTermLoudnessHistories[i] ??= [];
-      this.momentaryLoudnessHistories[i] ??= [];
       this.metrics[i] ??= {
         momentaryLoudness: Number.NEGATIVE_INFINITY,
         shortTermLoudness: Number.NEGATIVE_INFINITY,
@@ -232,16 +252,16 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       this.kWeightingFilters[i].length = inputs[i].length;
       this.truePeakFilters[i].length = inputs[i].length;
 
-      const context = {
+      process(inputs[i], this.metrics[i], {
         kWeightingFilter: this.kWeightingFilters[i],
         truePeakFilter: this.truePeakFilters[i],
+        momentarySampleAccumulator: this.momentarySampleAccumulators[i],
         momentaryEnergyBuffer: this.momentaryEnergyBuffers[i],
+        momentaryLoudnessHistory: this.momentaryLoudnessHistories[i],
+        shortTermSampleAccumulator: this.shortTermSampleAccumulators[i],
         shortTermEnergyBuffer: this.shortTermEnergyBuffers[i],
         shortTermLoudnessHistory: this.shortTermLoudnessHistories[i],
-        momentaryLoudnessHistory: this.momentaryLoudnessHistories[i],
-      };
-
-      process(inputs[i], this.metrics[i], context);
+      });
     }
   }
 
