@@ -26,7 +26,6 @@ import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
  * @extends AudioWorkletProcessor
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
-  lastTime: number = 0;
   kWeightingFilters: Array<Array<Repeat<BiquadraticFilter, 2>>> = [];
   truePeakFilters: Array<Array<Repeat<FiniteImpulseResponseFilter, 4>>> = [];
   momentarySampleAccumulators: Array<{ count: number }> = [];
@@ -98,9 +97,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         shortTermEnergyBuffer.push(sumOfSquaredChannelWeightedSamples);
       }
 
-      momentarySampleAccumulator.count += input[0].length;
-      shortTermSampleAccumulator.count += input[0].length;
-
       const momentaryHopSize = Math.round(sampleRate * MOMENTARY_HOP_INTERVAL_SEC);
       const shortTermHopSize = Math.round(sampleRate * SHORT_TERM_HOP_INTERVAL_SEC);
 
@@ -109,8 +105,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
           const energies = momentaryEnergyBuffer.slice();
           const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
           const momentaryLoudness = this.#energyToLoudness(meanEnergy);
+
           momentaryLoudnessHistory.push(momentaryLoudness);
           metrics.momentaryLoudness = momentaryLoudness;
+          metrics.maximumMomentaryLoudness = Math.max(metrics.maximumMomentaryLoudness, momentaryLoudness);
         }
 
         momentarySampleAccumulator.count -= momentaryHopSize;
@@ -124,6 +122,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
           shortTermLoudnessHistory.push(shortTermLoudness);
           metrics.shortTermLoudness = shortTermLoudness;
+          metrics.maximumShortTermLoudness = Math.max(metrics.maximumShortTermLoudness, shortTermLoudness);
         }
 
         shortTermSampleAccumulator.count -= shortTermHopSize;
@@ -195,10 +194,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
     }
 
-    if (currentTime - this.lastTime >= 0.1) {
-      this.port.postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
-      this.lastTime = currentTime;
-    }
+    this.port.postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
 
     return true;
   }
@@ -220,34 +216,37 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
     ) => void
   ) {
-    if (!inputs.length) return;
+    this.kWeightingFilters.length = inputs.length;
+    this.truePeakFilters.length = inputs.length;
+    this.momentaryEnergyBuffers.length = inputs.length;
+    this.shortTermEnergyBuffers.length = inputs.length;
+    this.shortTermLoudnessHistories.length = inputs.length;
+    this.momentaryLoudnessHistories.length = inputs.length;
+    this.metrics.length = inputs.length;
 
     for (let i = 0; i < inputs.length; i++) {
-      this.kWeightingFilters[i] ??= [];
-      this.truePeakFilters[i] ??= [];
+      if (!inputs[i].length) continue;
+
+      this.kWeightingFilters[i] ??= new Array();
+      this.truePeakFilters[i] ??= new Array();
       this.momentarySampleAccumulators[i] ??= { count: 0 };
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
-      this.momentaryLoudnessHistories[i] ??= [];
+      this.momentaryLoudnessHistories[i] ??= new Array();
       this.shortTermSampleAccumulators[i] ??= { count: 0 };
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
-      this.shortTermLoudnessHistories[i] ??= [];
+      this.shortTermLoudnessHistories[i] ??= new Array();
       this.metrics[i] ??= {
         momentaryLoudness: Number.NEGATIVE_INFINITY,
         shortTermLoudness: Number.NEGATIVE_INFINITY,
         integratedLoudness: Number.NEGATIVE_INFINITY,
-        loudnessRange: Number.NEGATIVE_INFINITY,
+        maximumMomentaryLoudness: Number.NEGATIVE_INFINITY,
+        maximumShortTermLoudness: Number.NEGATIVE_INFINITY,
         maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
+        loudnessRange: Number.NEGATIVE_INFINITY,
       };
 
-      this.kWeightingFilters.length = inputs.length;
-      this.truePeakFilters.length = inputs.length;
-      this.momentaryEnergyBuffers.length = inputs.length;
-      this.shortTermEnergyBuffers.length = inputs.length;
-      this.shortTermLoudnessHistories.length = inputs.length;
-      this.momentaryLoudnessHistories.length = inputs.length;
-      this.metrics.length = inputs.length;
-
-      if (!inputs[i].length) continue;
+      this.momentarySampleAccumulators[i].count += inputs[0][0].length;
+      this.shortTermSampleAccumulators[i].count += inputs[0][0].length;
 
       this.kWeightingFilters[i].length = inputs[i].length;
       this.truePeakFilters[i].length = inputs[i].length;

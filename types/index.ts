@@ -6,8 +6,10 @@ type Metrics = {
   momentaryLoudness: number;
   shortTermLoudness: number;
   integratedLoudness: number;
-  loudnessRange: number;
+  maximumMomentaryLoudness: number;
+  maximumShortTermLoudness: number;
   maximumTruePeakLevel: number;
+  loudnessRange: number;
 };
 
 type AudioLoudnessSnapshot = {
