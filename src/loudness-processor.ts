@@ -1,18 +1,24 @@
-import { Metrics } from '../types';
+import { Metrics, Repeat } from '../types';
 import { BiquadraticFilter } from './biquadratic-filter';
 import { CircularBuffer } from './circular-buffer';
 import {
+  ATTENUATION_DB,
   CHANNEL_WEIGHT_FACTORS,
-  FIR_COEFFICIENTS,
-  K_WEIGHTING_BIQUAD_COEFFICIENTS,
+  K_WEIGHTING_COEFFICIENTS,
   LOUDNESS_RANGE_LOWER_PERCENTILE,
   LOUDNESS_RANGE_UPPER_PERCENTILE,
+  LRA_ABSOLUTE_THRESHOLD,
+  LRA_RELATIVE_THRESHOLD_FACTOR,
+  LUFS_ABSOLUTE_THRESHOLD,
+  LUFS_RELATIVE_THRESHOLD_FACTOR,
   MOMENTARY_HOP_INTERVAL_SEC,
   MOMENTARY_WINDOW_SEC,
   SHORT_TERM_HOP_INTERVAL_SEC,
   SHORT_TERM_WINDOW_SEC,
+  TRUE_PEAK_COEFFICIENTS,
 } from './constants';
 import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
+import { Reference } from './reference';
 
 /**
  * Loudness Algorithm Implementation (ITU-R BS.1770-5)
@@ -21,221 +27,289 @@ import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
  * @extends AudioWorkletProcessor
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
-  kWeightingFilters: [BiquadraticFilter, BiquadraticFilter][][] = [];
-  truePeakFilters: FiniteImpulseResponseFilter[][][] = [];
-  momentaryEnergyBuffers: CircularBuffer<number>[] = [];
-  shortTermEnergyBuffers: CircularBuffer<number>[] = [];
-  shortTermLoudnessHistory: Array<number>[] = [];
-  integratedEnergyBlocks: Array<number>[] = [];
-  metrics: Metrics[] = [];
+  metrics: Array<Metrics> = [];
+  kWeightingFilters: Array<Array<Repeat<BiquadraticFilter, 2>>> = [];
+  truePeakFilters: Array<Array<Repeat<FiniteImpulseResponseFilter, 4>>> = [];
+  momentaryEnergyBuffers: Array<CircularBuffer<number>> = [];
+  momentaryEnergyRunningSums: Array<Reference<number>> = [];
+  momentarySampleAccumulators: Array<Reference<number>> = [];
+  momentaryLoudnessHistories: Array<Array<number>> = [];
+  shortTermEnergyBuffers: Array<CircularBuffer<number>> = [];
+  shortTermEnergyRunningSums: Array<Reference<number>> = [];
+  shortTermLoudnessHistories: Array<Array<number>> = [];
+  shortTermSampleAccumulators: Array<Reference<number>> = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
-
-    for (let i = 0; i < options.numberOfInputs; i++) {
-      this.metrics[i] = {
-        momentaryLoudness: Number.NEGATIVE_INFINITY,
-        shortTermLoudness: Number.NEGATIVE_INFINITY,
-        integratedLoudness: Number.NEGATIVE_INFINITY,
-        loudnessRange: Number.NEGATIVE_INFINITY,
-        maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
-      };
-    }
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
-    const kWeightedInputs: Float32Array[][] = [];
+    this.#processPerInput(inputs, (channels, context) => {
+      const { kWeightingFilters, truePeakFilters } = context;
+      const { momentaryEnergyBuffer, shortTermEnergyBuffer } = context;
+      const { momentaryEnergyRunningSum, shortTermEnergyRunningSum } = context;
+      const { momentarySampleAccumulator, shortTermSampleAccumulator } = context;
+      const { momentaryLoudnessHistory, shortTermLoudnessHistory } = context;
+      const { metrics } = context;
+      const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[channels.length] || new Object());
+      const channelCount = channels.length;
+      const sampleCount = channels[0].length;
 
-    for (let i = 0; i < inputs.length; i++) {
-      this.kWeightingFilters[i] ??= [];
-      this.truePeakFilters[i] ??= [];
-      kWeightedInputs[i] = [];
+      for (let i = 0; i < sampleCount; i++) {
+        let sumOfSquaredChannelWeightedSamples = 0;
 
-      for (let j = 0; j < inputs[i].length; j++) {
-        this.kWeightingFilters[i][j] ??= [
-          new BiquadraticFilter(
-            K_WEIGHTING_BIQUAD_COEFFICIENTS.highshelf.a,
-            K_WEIGHTING_BIQUAD_COEFFICIENTS.highshelf.b
-          ),
-          new BiquadraticFilter(K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.a, K_WEIGHTING_BIQUAD_COEFFICIENTS.highpass.b),
-        ];
-        this.truePeakFilters[i][j] ??= FIR_COEFFICIENTS.map(
-          (coefficients) => new FiniteImpulseResponseFilter(coefficients)
-        );
-        kWeightedInputs[i][j] = new Float32Array(inputs[i][j].length);
+        for (let j = 0; j < channelCount; j++) {
+          const [highshelfFilter, highpassFilter] = kWeightingFilters[j];
+          const highshelfOutput = highshelfFilter.process(channels[j][i]);
+          const kWeightedSample = highpassFilter.process(highshelfOutput);
+          const sampleEnergy = kWeightedSample ** 2;
+          const channelWeight = channelWeights[j] ?? 1.0;
 
-        for (let k = 0; k < inputs[i][j].length; k++) {
-          const [highshelfFilter, highpassFilter] = this.kWeightingFilters[i][j];
-          const highshelfOutput = highshelfFilter.process(inputs[i][j][k]);
-          const highpassOutput = highpassFilter.process(highshelfOutput);
-          kWeightedInputs[i][j][k] = highpassOutput;
-
-          const attenuation = Math.pow(10, -12.04 / 20);
-          const attenuatedSample = inputs[i][j][k] * attenuation;
+          const attenuation = Math.pow(10, -ATTENUATION_DB / 20);
+          const attenuatedSample = channels[j][i] * attenuation;
+          const oversample = sampleRate >= 96000 ? 2 : 4;
           const truePeaks = [];
 
-          for (const filter of this.truePeakFilters[i][j]) {
+          for (let k = 0; k < oversample; k++) {
+            const filter = truePeakFilters[j][k];
             truePeaks.push(Math.abs(filter.process(attenuatedSample)));
           }
 
           const maximumTruePeak = Math.max(...truePeaks);
-          const maximumTruePeakLevel = 20 * Math.log10(maximumTruePeak) + 12.04;
+          const maximumTruePeakLevel = 20 * Math.log10(maximumTruePeak) + ATTENUATION_DB;
+          const previousMaximumTruePeakLevel = metrics.maximumTruePeakLevel;
 
-          this.metrics[i].maximumTruePeakLevel = Math.max(this.metrics[i].maximumTruePeakLevel, maximumTruePeakLevel);
-        }
-      }
-    }
+          metrics.maximumTruePeakLevel = Math.max(previousMaximumTruePeakLevel, maximumTruePeakLevel);
 
-    for (let i = 0; i < kWeightedInputs.length; i++) {
-      const momentaryWindowSize = Math.round(sampleRate * MOMENTARY_WINDOW_SEC);
-      const shortTermWindowSize = Math.round(sampleRate * SHORT_TERM_WINDOW_SEC);
-
-      this.momentaryEnergyBuffers[i] ??= new CircularBuffer(momentaryWindowSize);
-      this.shortTermEnergyBuffers[i] ??= new CircularBuffer(shortTermWindowSize);
-
-      const channelNumber = inputs[i].length as keyof typeof CHANNEL_WEIGHT_FACTORS;
-      const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[channelNumber] ?? {});
-
-      for (let j = 0; j < kWeightedInputs[i][0].length; j++) {
-        let sumOfSquaredChannelWeightedSamples = 0;
-
-        for (let k = 0; k < kWeightedInputs[i].length; k++) {
-          const sampleEnergy = kWeightedInputs[i][k][j] ** 2;
-          const channelWeight = channelWeights[k] ?? 1.0;
           sumOfSquaredChannelWeightedSamples += sampleEnergy * channelWeight;
         }
 
-        this.momentaryEnergyBuffers[i].push(sumOfSquaredChannelWeightedSamples);
-        this.shortTermEnergyBuffers[i].push(sumOfSquaredChannelWeightedSamples);
-      }
-    }
+        const energy = sumOfSquaredChannelWeightedSamples;
 
-    for (let i = 0; i < this.momentaryEnergyBuffers.length; i++) {
+        const previousMomentaryEnergy = momentaryEnergyBuffer.peek() ?? 0;
+        const previousMomentaryEnergyForSum = momentaryEnergyBuffer.isFull() ? previousMomentaryEnergy : 0;
+
+        momentaryEnergyRunningSum.set(momentaryEnergyRunningSum.get() + energy - previousMomentaryEnergyForSum);
+        momentaryEnergyBuffer.push(energy);
+
+        const previousShortTermEnergy = shortTermEnergyBuffer.peek() ?? 0;
+        const previousShortTermEnergyForSum = shortTermEnergyBuffer.isFull() ? previousShortTermEnergy : 0;
+
+        shortTermEnergyRunningSum.set(shortTermEnergyRunningSum.get() + energy - previousShortTermEnergyForSum);
+        shortTermEnergyBuffer.push(energy);
+
+        if (momentaryEnergyBuffer.isFull()) {
+          const meanEnergy = momentaryEnergyRunningSum.get() / momentaryEnergyBuffer.capacity;
+          const momentaryLoudness = this.#energyToLoudness(meanEnergy);
+
+          metrics.momentaryLoudness = momentaryLoudness;
+          metrics.maximumMomentaryLoudness = Math.max(metrics.maximumMomentaryLoudness, momentaryLoudness);
+        }
+      }
+
+      momentarySampleAccumulator.set(momentarySampleAccumulator.get() + sampleCount);
+      shortTermSampleAccumulator.set(shortTermSampleAccumulator.get() + sampleCount);
+
       const momentaryHopSize = Math.round(sampleRate * MOMENTARY_HOP_INTERVAL_SEC);
-
-      this.integratedEnergyBlocks[i] ??= new Array();
-
-      if (!this.momentaryEnergyBuffers[i].isFull()) {
-        continue;
-      }
-
-      if (currentFrame % momentaryHopSize !== 0) {
-        continue;
-      }
-
-      const energies = this.momentaryEnergyBuffers[i].slice();
-      const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
-      const loudness = -0.691 + 10 * Math.log10(Math.max(meanEnergy, Number.EPSILON));
-
-      this.metrics[i].momentaryLoudness = loudness;
-      this.integratedEnergyBlocks[i].push(meanEnergy);
-    }
-
-    for (let i = 0; i < this.shortTermEnergyBuffers.length; i++) {
       const shortTermHopSize = Math.round(sampleRate * SHORT_TERM_HOP_INTERVAL_SEC);
 
-      if (!this.shortTermEnergyBuffers[i].isFull()) {
-        continue;
-      }
+      while (momentarySampleAccumulator.get() >= momentaryHopSize) {
+        if (momentaryEnergyBuffer.isFull()) {
+          const meanEnergy = momentaryEnergyRunningSum.get() / momentaryEnergyBuffer.capacity;
+          const momentaryLoudness = this.#energyToLoudness(meanEnergy);
 
-      if (currentFrame % shortTermHopSize !== 0) {
-        continue;
-      }
-
-      this.shortTermLoudnessHistory[i] ??= new Array();
-
-      const energies = this.shortTermEnergyBuffers[i].slice();
-      const meanEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
-      const loudness = -0.691 + 10 * Math.log10(Math.max(meanEnergy, Number.EPSILON));
-
-      this.metrics[i].shortTermLoudness = loudness;
-      this.shortTermLoudnessHistory[i].push(loudness);
-    }
-
-    for (let i = 0; i < this.shortTermLoudnessHistory.length; i++) {
-      if (this.shortTermLoudnessHistory[i].length < 2) {
-        continue;
-      }
-
-      const absoluteGatedLoudnesses = this.shortTermLoudnessHistory[i].filter((loudness) => loudness > -70);
-
-      if (absoluteGatedLoudnesses.length < 2) {
-        continue;
-      }
-
-      const absoluteGatedEnergies = absoluteGatedLoudnesses.map((loudness) => Math.pow(10, (loudness + 0.691) / 10));
-      const sumOfAbsoluteGatedEnergy = absoluteGatedEnergies.reduce((a, b) => a + b, 0);
-      const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergies.length;
-      const relativeGatedloudness = -0.691 + 10 * Math.log10(Math.max(absoluteGatedMeanEnergy, Number.EPSILON));
-      const relativeGatedLoudnesses = absoluteGatedLoudnesses.filter(
-        (loudness) => loudness > relativeGatedloudness + -20
-      );
-
-      if (relativeGatedLoudnesses.length < 2) {
-        continue;
-      }
-
-      const sortedLoudnesses = relativeGatedLoudnesses.toSorted((a, b) => a - b);
-      const [lowerPercentile, upperPercentile] = [LOUDNESS_RANGE_LOWER_PERCENTILE, LOUDNESS_RANGE_UPPER_PERCENTILE].map(
-        (percentile) => {
-          const lowerIndex = Math.floor(percentile * (sortedLoudnesses.length - 1));
-          const upperIndex = Math.ceil(percentile * (sortedLoudnesses.length - 1));
-
-          if (upperIndex === lowerIndex) {
-            return sortedLoudnesses[lowerIndex];
-          }
-
-          return (
-            sortedLoudnesses[lowerIndex] +
-            (sortedLoudnesses[upperIndex] - sortedLoudnesses[lowerIndex]) *
-              (percentile * (sortedLoudnesses.length - 1) - lowerIndex)
-          );
+          momentaryLoudnessHistory.push(momentaryLoudness);
         }
-      );
 
-      const loudnessRange = upperPercentile - lowerPercentile;
-      this.metrics[i].loudnessRange = loudnessRange;
-    }
-
-    for (let i = 0; i < this.integratedEnergyBlocks.length; i++) {
-      const integratedLoudnesses = this.integratedEnergyBlocks[i].map(
-        (energy) => -0.691 + 10 * Math.log10(Math.max(energy, Number.EPSILON))
-      );
-      const absoluteGatedEnergyBlocks = this.integratedEnergyBlocks[i].filter(
-        (_, index) => integratedLoudnesses[index] > -70
-      );
-
-      if (!absoluteGatedEnergyBlocks.length) {
-        continue;
+        momentarySampleAccumulator.set(momentarySampleAccumulator.get() - momentaryHopSize);
       }
 
-      const sumOfAbsoluteGatedEnergy = absoluteGatedEnergyBlocks.reduce((a, b) => a + b, 0);
-      const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergyBlocks.length;
-      const absoluteGatedLoudness = -0.691 + 10 * Math.log10(Math.max(absoluteGatedMeanEnergy, Number.EPSILON));
-      const relativeGatedEnergyBlocks = absoluteGatedEnergyBlocks.filter(
-        (energy) => -0.691 + 10 * Math.log10(Math.max(energy, Number.EPSILON)) > absoluteGatedLoudness + -10
-      );
+      while (shortTermSampleAccumulator.get() >= shortTermHopSize) {
+        if (shortTermEnergyBuffer.isFull()) {
+          const meanEnergy = shortTermEnergyRunningSum.get() / shortTermEnergyBuffer.capacity;
+          const shortTermLoudness = this.#energyToLoudness(meanEnergy);
 
-      if (!relativeGatedEnergyBlocks.length) {
-        continue;
+          metrics.shortTermLoudness = shortTermLoudness;
+          metrics.maximumShortTermLoudness = Math.max(metrics.maximumShortTermLoudness, shortTermLoudness);
+
+          shortTermLoudnessHistory.push(shortTermLoudness);
+        }
+
+        shortTermSampleAccumulator.set(shortTermSampleAccumulator.get() - shortTermHopSize);
       }
 
-      const sumOfRelativeGatedEnergy = relativeGatedEnergyBlocks.reduce((a, b) => a + b, 0);
-      const relativeGatedMeanEnergy = sumOfRelativeGatedEnergy / relativeGatedEnergyBlocks.length;
-      const loudness = -0.691 + 10 * Math.log10(Math.max(relativeGatedMeanEnergy, Number.EPSILON));
+      if (momentaryLoudnessHistory.length > 2) {
+        const absoluteGatedLoudnesses = momentaryLoudnessHistory.filter((v) => v > LUFS_ABSOLUTE_THRESHOLD);
 
-      this.metrics[i].integratedLoudness = loudness;
+        if (absoluteGatedLoudnesses.length > 2) {
+          const absoluteGatedEnergies = absoluteGatedLoudnesses.map(this.#loudnessToEnergy);
+          const sumOfAbsoluteGatedEnergy = absoluteGatedEnergies.reduce((a, b) => a + b, 0);
+          const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergies.length;
+          const absoluteGatedLoudness = this.#energyToLoudness(absoluteGatedMeanEnergy);
+          const relativeThreshold = absoluteGatedLoudness + LUFS_RELATIVE_THRESHOLD_FACTOR;
+          const relativeGatedLoudnesses = absoluteGatedLoudnesses.filter((v) => v > relativeThreshold);
+
+          if (relativeGatedLoudnesses.length > 2) {
+            const relativeGatedEnergies = relativeGatedLoudnesses.map(this.#loudnessToEnergy);
+            const sumOfRelativeGatedEnergy = relativeGatedEnergies.reduce((a, b) => a + b, 0);
+            const relativeGatedMeanEnergy = sumOfRelativeGatedEnergy / relativeGatedEnergies.length;
+            const integratedLoudness = this.#energyToLoudness(relativeGatedMeanEnergy);
+
+            metrics.integratedLoudness = integratedLoudness;
+          }
+        }
+      }
+
+      if (shortTermLoudnessHistory.length > 2) {
+        const absoluteGatedLoudnesses = shortTermLoudnessHistory.filter((v) => v > LRA_ABSOLUTE_THRESHOLD);
+
+        if (absoluteGatedLoudnesses.length > 2) {
+          const absoluteGatedEnergies = absoluteGatedLoudnesses.map(this.#loudnessToEnergy);
+          const sumOfAbsoluteGatedEnergy = absoluteGatedEnergies.reduce((a, b) => a + b, 0);
+          const absoluteGatedMeanEnergy = sumOfAbsoluteGatedEnergy / absoluteGatedEnergies.length;
+          const absoluteGatedLoudness = this.#energyToLoudness(absoluteGatedMeanEnergy);
+          const relativeThreshold = absoluteGatedLoudness + LRA_RELATIVE_THRESHOLD_FACTOR;
+          const relativeGatedLoudnesses = absoluteGatedLoudnesses.filter((v) => v > relativeThreshold);
+
+          if (relativeGatedLoudnesses.length > 2) {
+            const sortedLoudnesses = relativeGatedLoudnesses.toSorted((a, b) => a - b);
+            const [lowerPercentile, upperPercentile] = [
+              LOUDNESS_RANGE_LOWER_PERCENTILE,
+              LOUDNESS_RANGE_UPPER_PERCENTILE,
+            ].map((percentile) => {
+              const lowerIndex = Math.floor(percentile * (sortedLoudnesses.length - 1));
+              const upperIndex = Math.ceil(percentile * (sortedLoudnesses.length - 1));
+
+              if (upperIndex === lowerIndex) {
+                return sortedLoudnesses[lowerIndex];
+              }
+
+              return (
+                sortedLoudnesses[lowerIndex] +
+                (sortedLoudnesses[upperIndex] - sortedLoudnesses[lowerIndex]) *
+                  (percentile * (sortedLoudnesses.length - 1) - lowerIndex)
+              );
+            });
+
+            const loudnessRange = upperPercentile - lowerPercentile;
+            metrics.loudnessRange = loudnessRange;
+          }
+        }
+      }
+    });
+
+    this.#passThrough(inputs, outputs);
+
+    this.#postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+
+    return true;
+  }
+
+  #processPerInput(
+    inputs: Float32Array[][],
+    process: (
+      channels: Float32Array[],
+      context: {
+        metrics: Metrics;
+        kWeightingFilters: Array<Repeat<BiquadraticFilter, 2>>;
+        truePeakFilters: Array<Repeat<FiniteImpulseResponseFilter, 4>>;
+        momentaryEnergyBuffer: CircularBuffer<number>;
+        momentaryEnergyRunningSum: Reference<number>;
+        momentarySampleAccumulator: Reference<number>;
+        momentaryLoudnessHistory: Array<number>;
+        shortTermEnergyBuffer: CircularBuffer<number>;
+        shortTermEnergyRunningSum: Reference<number>;
+        shortTermLoudnessHistory: Array<number>;
+        shortTermSampleAccumulator: Reference<number>;
+      }
+    ) => void
+  ): void {
+    this.kWeightingFilters.length = inputs.length;
+    this.truePeakFilters.length = inputs.length;
+    this.momentaryEnergyRunningSums.length = inputs.length;
+    this.momentarySampleAccumulators.length = inputs.length;
+    this.momentaryEnergyBuffers.length = inputs.length;
+    this.momentaryLoudnessHistories.length = inputs.length;
+    this.shortTermEnergyRunningSums.length = inputs.length;
+    this.shortTermSampleAccumulators.length = inputs.length;
+    this.shortTermEnergyBuffers.length = inputs.length;
+    this.shortTermLoudnessHistories.length = inputs.length;
+    this.metrics.length = inputs.length;
+
+    for (let i = 0; i < inputs.length; i++) {
+      if (!inputs[i] || !inputs[i].length || !inputs[i][0].length) continue;
+
+      this.kWeightingFilters[i] ??= [];
+      this.truePeakFilters[i] ??= [];
+      this.momentaryEnergyRunningSums[i] ??= new Reference(0);
+      this.momentarySampleAccumulators[i] ??= new Reference(0);
+      this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
+      this.momentaryLoudnessHistories[i] ??= new Array();
+      this.shortTermEnergyRunningSums[i] ??= new Reference(0);
+      this.shortTermSampleAccumulators[i] ??= new Reference(0);
+      this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
+      this.shortTermLoudnessHistories[i] ??= new Array();
+      this.metrics[i] ??= {
+        momentaryLoudness: Number.NEGATIVE_INFINITY,
+        shortTermLoudness: Number.NEGATIVE_INFINITY,
+        integratedLoudness: Number.NEGATIVE_INFINITY,
+        maximumMomentaryLoudness: Number.NEGATIVE_INFINITY,
+        maximumShortTermLoudness: Number.NEGATIVE_INFINITY,
+        maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
+        loudnessRange: Number.NEGATIVE_INFINITY,
+      };
+
+      this.kWeightingFilters[i].length = inputs[i].length;
+      this.truePeakFilters[i].length = inputs[i].length;
+
+      for (let j = 0; j < inputs[i].length; j++) {
+        this.kWeightingFilters[i][j] ??= [
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highshelf.a, K_WEIGHTING_COEFFICIENTS.highshelf.b),
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b),
+        ];
+
+        this.truePeakFilters[i][j] ??= [
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase0),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase1),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase2),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3),
+        ];
+      }
+
+      process(inputs[i], {
+        metrics: this.metrics[i],
+        kWeightingFilters: this.kWeightingFilters[i],
+        truePeakFilters: this.truePeakFilters[i],
+        momentaryEnergyBuffer: this.momentaryEnergyBuffers[i],
+        momentaryEnergyRunningSum: this.momentaryEnergyRunningSums[i],
+        momentarySampleAccumulator: this.momentarySampleAccumulators[i],
+        momentaryLoudnessHistory: this.momentaryLoudnessHistories[i],
+        shortTermEnergyBuffer: this.shortTermEnergyBuffers[i],
+        shortTermEnergyRunningSum: this.shortTermEnergyRunningSums[i],
+        shortTermLoudnessHistory: this.shortTermLoudnessHistories[i],
+        shortTermSampleAccumulator: this.shortTermSampleAccumulators[i],
+      });
     }
+  }
 
+  #passThrough(inputs: Float32Array[][], outputs: Float32Array[][]): void {
     for (let i = 0; i < outputs.length; i++) {
       for (let j = 0; j < outputs[i].length; j++) {
         outputs[i][j].set(inputs[i][j]);
       }
     }
+  }
 
-    this.port.postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+  #postMessage(message?: any): void {
+    this.port.postMessage(message);
+  }
 
-    return true;
+  #energyToLoudness(energy: number): number {
+    return -0.691 + 10 * Math.log10(Math.max(energy, Number.EPSILON));
+  }
+
+  #loudnessToEnergy(loudness: number): number {
+    return Math.pow(10, (loudness + 0.691) / 10);
   }
 }
 

@@ -2,14 +2,6 @@
 
 A real-time loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
 
-## Features
-
-- **Standards-based:** Implements loudness measurement algorithms defined in [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770).
-- **Real-time support:** Supports both offline (file-based) and live (stream-based) measurements.
-- **Comprehensive metrics:** Outputs momentary, short-term, integrated loudness, loudness range (LRA), and maximum true-peak level.
-- **Multi-channel support:** Handles `mono`, `stereo`, `5.1`, `7.1`, and higher (up to 24 channels).
-- **Easy Integration**: Can be loaded in any modern browser supporting `AudioWorklet`.
-
 ## Installation
 
 ### Download
@@ -58,7 +50,7 @@ source.start();
 context.startRendering();
 ```
 
-### Live measurement
+### Live-based measurement
 
 Supports `MediaStream` or `MediaElement` sources:
 
@@ -92,8 +84,10 @@ type AudioLoudnessSnapshot = {
       momentaryLoudness: number;
       shortTermLoudness: number;
       integratedLoudness: number;
-      loudnessRange: number;
+      maximumMomentaryLoudness: number;
+      maximumShortTermLoudness: number;
       maximumTruePeakLevel: number;
+      loudnessRange: number;
     },
   ];
 };
@@ -101,13 +95,15 @@ type AudioLoudnessSnapshot = {
 
 ### Metrics
 
-| Metric                 | Unit          |
-| ---------------------- | ------------- |
-| `momentaryLoudness`    | `LUFS`/`LKFS` |
-| `shortTermLoudness`    | `LUFS`/`LKFS` |
-| `integratedLoudness`   | `LUFS`/`LKFS` |
-| `loudnessRange`        | `LRA`         |
-| `maximumTruePeakLevel` | `dBTP`        |
+| Metric                     | Unit          |
+| -------------------------- | ------------- |
+| `momentaryLoudness`        | `LUFS`/`LKFS` |
+| `shortTermLoudness`        | `LUFS`/`LKFS` |
+| `integratedLoudness`       | `LUFS`/`LKFS` |
+| `maximumMomentaryLoudness` | `LUFS`/`LKFS` |
+| `maximumShortTermLoudness` | `LUFS`/`LKFS` |
+| `maximumTruePeakLevel`     | `dBTP`        |
+| `loudnessRange`            | `LRA`         |
 
 ### Supported Channels
 
@@ -191,7 +187,7 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 | seq-3341-11-24bit                    | Max S = −38.0, −37.0, …, −19.0 ±0.1 LUFS, successive values | :white_check_mark: |
 | seq-3341-12-24bit                    | M = −23.0 ±0.1 LUFS, constant after 1 s                     | :white_check_mark: |
 | seq-3341-13-\*-24bit                 | Max M = −23.0 ±0.1 LUFS, for each segment                   | :white_check_mark: |
-| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        |                    |
+| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        | :white_check_mark: |
 | seq-3341-15-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
 | seq-3341-16-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
 | seq-3341-17-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
@@ -225,7 +221,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## References
 
-1. [ITU-R BS.1770](https://www.itu.int/rec/R-REC-BS.1770)
-2. [ITU-R BS.2217](https://www.itu.int/pub/R-REP-BS.2217)
-3. [EBU Tech 3341](https://tech.ebu.ch/publications/tech3341)
-4. [EBU Tech 3342](https://tech.ebu.ch/publications/tech3342)
+- [ITU-R BS.1770](https://www.itu.int/rec/R-REC-BS.1770)
+- [ITU-R BS.2217](https://www.itu.int/pub/R-REP-BS.2217)
+- [EBU Tech 3341](https://tech.ebu.ch/publications/tech3341)
+- [EBU Tech 3342](https://tech.ebu.ch/publications/tech3342)
