@@ -50,7 +50,7 @@ source.start();
 context.startRendering();
 ```
 
-### Live measurement
+### Live-based measurement
 
 Supports `MediaStream` or `MediaElement` sources:
 
