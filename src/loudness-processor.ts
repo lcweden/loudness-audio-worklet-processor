@@ -28,6 +28,8 @@ import { Reference } from './reference';
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
   capacity: number = NaN;
+  interval: number = 0;
+  lastTime: number = 0;
   metrics: Array<Metrics> = [];
   kWeightingFilters: Array<Array<Repeat<BiquadraticFilter, 2>>> = [];
   truePeakFilters: Array<Array<Repeat<FiniteImpulseResponseFilter, 4>>> = [];
@@ -43,6 +45,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
     this.capacity = options.processorOptions?.capacity ?? NaN;
+    this.interval = options.processorOptions?.interval ?? 0;
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
@@ -202,7 +205,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
     this.#passThrough(inputs, outputs);
 
-    this.#postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+    if (currentTime - this.lastTime >= this.interval) {
+      this.#postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+      this.lastTime = currentTime;
+    }
 
     return true;
   }

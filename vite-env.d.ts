@@ -4,7 +4,7 @@ interface AudioWorkletProcessorOptions {
   numberOfInputs: number;
   numberOfOutputs: number;
   outputChannelCount: number[][];
-  processorOptions?: { capacity?: number };
+  processorOptions?: { interval?: number; capacity?: number };
 }
 
 declare const sampleRate: number;

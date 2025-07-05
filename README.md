@@ -24,6 +24,38 @@ audioContext.audioWorklet.addModule(module);
 
 ## Quick Start
 
+### Example
+
+```html
+<!doctype html>
+<html>
+  <body>
+    <pre></pre>
+    <script>
+      const pre = document.querySelector('pre');
+      navigator.mediaDevices.getDisplayMedia({ audio: true }).then((mediaStream) => {
+        const context = new AudioContext();
+        context.audioWorklet
+          .addModule('https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js')
+          .then(() => {
+            const source = new MediaStreamAudioSourceNode(context, { mediaStream });
+            const worklet = new AudioWorkletNode(context, 'loudness-processor', {
+              processorOptions: {
+                interval: 0.1,
+                capacity: 600,
+              },
+            });
+
+            source.connect(worklet).port.onmessage = (event) => {
+              pre.textContent = JSON.stringify(event.data, null, 2);
+            };
+          });
+      });
+    </script>
+  </body>
+</html>
+```
+
 ### File-based measurement
 
 Suppose you already have an audio file (e.g., from an input[type="file"]):
@@ -75,6 +107,28 @@ source.connect(worklet).connect(context.destination);
 
 ## API
 
+### Options
+
+The `AudioWorkletNode` constructor accepts the following options:
+
+#### Params
+
+| Option   | Type     | Default | Description                                                                                                                                                                      |
+| -------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| interval | `number` | `0`     | Message interval in seconds.                                                                                                                                                     |
+| capacity | `number` | `null`  | Maximum seconds of history to keep. If set to `null`, the processor will not limit the history size. This is useful for preventing memory overflow in long-running measurements. |
+
+#### Example
+
+```javascript
+const worklet = new AudioWorkletNode(context, 'loudness-processor', {
+  processorOptions: {
+    interval: 0.01,
+    capacity: 600,
+  },
+});
+```
+
 ### Message Format
 
 Measurement results are sent back to the main thread via `port.onmessage` with the following format:
@@ -97,7 +151,7 @@ type AudioLoudnessSnapshot = {
 };
 ```
 
-### Metrics
+### Units
 
 | Metric                     | Unit          |
 | -------------------------- | ------------- |
