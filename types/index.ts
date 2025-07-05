@@ -1,9 +1,15 @@
+type Repeat<T, C extends number, Result extends any[] = []> = Result['length'] extends C
+  ? Result
+  : Repeat<T, C, [...Result, T]>;
+
 type Metrics = {
   momentaryLoudness: number;
   shortTermLoudness: number;
   integratedLoudness: number;
-  loudnessRange: number;
+  maximumMomentaryLoudness: number;
+  maximumShortTermLoudness: number;
   maximumTruePeakLevel: number;
+  loudnessRange: number;
 };
 
 type AudioLoudnessSnapshot = {
@@ -12,4 +18,4 @@ type AudioLoudnessSnapshot = {
   currentMetrics: Metrics[];
 };
 
-export type { AudioLoudnessSnapshot, Metrics };
+export type { AudioLoudnessSnapshot, Metrics, Repeat };
