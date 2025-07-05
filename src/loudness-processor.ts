@@ -27,7 +27,7 @@ import { Reference } from './reference';
  * @extends AudioWorkletProcessor
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
-  capacity: number = NaN;
+  capacity: number | null = null;
   interval: number = 0;
   lastTime: number = 0;
   metrics: Array<Metrics> = [];
@@ -252,15 +252,15 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       this.momentaryEnergyRunningSums[i] ??= new Reference(0);
       this.momentarySampleAccumulators[i] ??= new Reference(0);
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
-      this.momentaryLoudnessHistories[i] ??= isNaN(this.capacity)
+      this.momentaryLoudnessHistories[i] ??= this.capacity
         ? new Array()
-        : new CircularBuffer(Math.ceil(this.capacity / MOMENTARY_HOP_INTERVAL_SEC));
+        : new CircularBuffer(Math.ceil(this.capacity! / MOMENTARY_HOP_INTERVAL_SEC));
       this.shortTermEnergyRunningSums[i] ??= new Reference(0);
       this.shortTermSampleAccumulators[i] ??= new Reference(0);
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
-      this.shortTermLoudnessHistories[i] ??= isNaN(this.capacity)
+      this.shortTermLoudnessHistories[i] ??= this.capacity
         ? new Array()
-        : new CircularBuffer(Math.ceil(this.capacity / SHORT_TERM_HOP_INTERVAL_SEC));
+        : new CircularBuffer(Math.ceil(this.capacity! / SHORT_TERM_HOP_INTERVAL_SEC));
       this.metrics[i] ??= {
         momentaryLoudness: Number.NEGATIVE_INFINITY,
         shortTermLoudness: Number.NEGATIVE_INFINITY,
