@@ -37,10 +37,12 @@ function MeterPage(meterPageProps: MeterPageProps) {
       currentTime: Number(event.data.currentTime.toFixed(1)),
       currentMetrics: event.data.currentMetrics.map((currentMetric) => ({
         integratedLoudness: Number(currentMetric.integratedLoudness.toFixed(1)),
-        loudnessRange: Number(currentMetric.loudnessRange.toFixed(1)),
-        maximumTruePeakLevel: Number(currentMetric.maximumTruePeakLevel.toFixed(1)),
         momentaryLoudness: Number(currentMetric.momentaryLoudness.toFixed(1)),
         shortTermLoudness: Number(currentMetric.shortTermLoudness.toFixed(1)),
+        maximumTruePeakLevel: Number(currentMetric.maximumTruePeakLevel.toFixed(1)),
+        maximumMomentaryLoudness: Number(currentMetric.maximumMomentaryLoudness.toFixed(1)),
+        maximumShortTermLoudness: Number(currentMetric.maximumShortTermLoudness.toFixed(1)),
+        loudnessRange: Number(currentMetric.loudnessRange.toFixed(1)),
       })),
     };
 
