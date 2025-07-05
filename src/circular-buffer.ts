@@ -3,7 +3,7 @@ class CircularBuffer<T> {
   #capacity: number;
   #head: number = 0;
   #tail: number = 0;
-  #size: number = 0;
+  #length: number = 0;
 
   constructor(capacity: number) {
     this.#capacity = capacity ? capacity : 0;
@@ -16,7 +16,7 @@ class CircularBuffer<T> {
     if (this.isFull()) {
       this.#head = (this.#head + 1) % this.#capacity;
     } else {
-      this.#size++;
+      this.#length++;
     }
 
     this.#tail = (this.#tail + 1) % this.#capacity;
@@ -29,7 +29,7 @@ class CircularBuffer<T> {
 
     const item = this.#buffer[this.#head];
     this.#head = (this.#head + 1) % this.#capacity;
-    this.#size--;
+    this.#length--;
 
     return item;
   }
@@ -42,13 +42,13 @@ class CircularBuffer<T> {
     return this.#buffer[this.#head];
   }
 
-  slice(start: number = 0, end: number = this.#size): T[] {
+  slice(start: number = 0, end: number = this.#length): T[] {
     if (start < 0) {
       start = 0;
     }
 
-    if (end > this.#size) {
-      end = this.#size;
+    if (end > this.#length) {
+      end = this.#length;
     }
 
     if (start >= end) {
@@ -66,19 +66,26 @@ class CircularBuffer<T> {
   }
 
   isEmpty(): boolean {
-    return this.#size === 0;
+    return this.#length === 0;
   }
 
   isFull(): boolean {
-    return this.#size === this.#capacity;
+    return this.#length === this.#capacity;
   }
 
-  get size(): number {
-    return this.#size;
+  get length(): number {
+    return this.#length;
   }
 
   get capacity(): number {
     return this.#capacity;
+  }
+
+  *[Symbol.iterator](): IterableIterator<T> {
+    for (let i = 0; i < this.#length; i++) {
+      const index = (this.#head + i) % this.#capacity;
+      yield this.#buffer[index];
+    }
   }
 }
 

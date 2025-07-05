@@ -60,7 +60,11 @@ const context = new AudioContext({ sampleRate: 48000 });
 await context.audioWorklet.addModule('loudness.worklet.js');
 
 const source = new MediaStreamAudioSourceNode(context, { mediaStream: mediaStream });
-const worklet = new AudioWorkletNode(context, 'loudness-processor');
+const worklet = new AudioWorkletNode(context, 'loudness-processor', {
+  processorOptions: {
+    capacity: 600, // Seconds of history to keep, prevent memory overflow
+  },
+});
 
 worklet.port.onmessage = (event) => {
   console.log('Loudness Data:', event.data);
