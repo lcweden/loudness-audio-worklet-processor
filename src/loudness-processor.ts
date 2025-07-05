@@ -27,20 +27,25 @@ import { Reference } from './reference';
  * @extends AudioWorkletProcessor
  */
 class LoudnessProcessor extends AudioWorkletProcessor {
+  capacity: number | null = null;
+  interval: number = 0;
+  lastTime: number = 0;
   metrics: Array<Metrics> = [];
   kWeightingFilters: Array<Array<Repeat<BiquadraticFilter, 2>>> = [];
   truePeakFilters: Array<Array<Repeat<FiniteImpulseResponseFilter, 4>>> = [];
   momentaryEnergyBuffers: Array<CircularBuffer<number>> = [];
   momentaryEnergyRunningSums: Array<Reference<number>> = [];
   momentarySampleAccumulators: Array<Reference<number>> = [];
-  momentaryLoudnessHistories: Array<Array<number>> = [];
+  momentaryLoudnessHistories: Array<Array<number>> | Array<CircularBuffer<number>> = [];
   shortTermEnergyBuffers: Array<CircularBuffer<number>> = [];
   shortTermEnergyRunningSums: Array<Reference<number>> = [];
-  shortTermLoudnessHistories: Array<Array<number>> = [];
+  shortTermLoudnessHistories: Array<Array<number>> | Array<CircularBuffer<number>> = [];
   shortTermSampleAccumulators: Array<Reference<number>> = [];
 
   constructor(options: AudioWorkletProcessorOptions) {
     super(options);
+    this.capacity = options.processorOptions?.capacity ?? NaN;
+    this.interval = options.processorOptions?.interval ?? 0;
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
@@ -139,7 +144,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
 
       if (momentaryLoudnessHistory.length > 2) {
-        const absoluteGatedLoudnesses = momentaryLoudnessHistory.filter((v) => v > LUFS_ABSOLUTE_THRESHOLD);
+        const absoluteGatedLoudnesses = Array.from(momentaryLoudnessHistory).filter((v) => v > LUFS_ABSOLUTE_THRESHOLD);
 
         if (absoluteGatedLoudnesses.length > 2) {
           const absoluteGatedEnergies = absoluteGatedLoudnesses.map(this.#loudnessToEnergy);
@@ -161,7 +166,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
 
       if (shortTermLoudnessHistory.length > 2) {
-        const absoluteGatedLoudnesses = shortTermLoudnessHistory.filter((v) => v > LRA_ABSOLUTE_THRESHOLD);
+        const absoluteGatedLoudnesses = Array.from(shortTermLoudnessHistory).filter((v) => v > LRA_ABSOLUTE_THRESHOLD);
 
         if (absoluteGatedLoudnesses.length > 2) {
           const absoluteGatedEnergies = absoluteGatedLoudnesses.map(this.#loudnessToEnergy);
@@ -200,7 +205,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
     this.#passThrough(inputs, outputs);
 
-    this.#postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+    if (currentTime - this.lastTime >= this.interval) {
+      this.#postMessage({ currentFrame, currentTime, currentMetrics: this.metrics });
+      this.lastTime = currentTime;
+    }
 
     return true;
   }
@@ -216,10 +224,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         momentaryEnergyBuffer: CircularBuffer<number>;
         momentaryEnergyRunningSum: Reference<number>;
         momentarySampleAccumulator: Reference<number>;
-        momentaryLoudnessHistory: Array<number>;
+        momentaryLoudnessHistory: Array<number> | CircularBuffer<number>;
         shortTermEnergyBuffer: CircularBuffer<number>;
         shortTermEnergyRunningSum: Reference<number>;
-        shortTermLoudnessHistory: Array<number>;
+        shortTermLoudnessHistory: Array<number> | CircularBuffer<number>;
         shortTermSampleAccumulator: Reference<number>;
       }
     ) => void
@@ -244,11 +252,15 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       this.momentaryEnergyRunningSums[i] ??= new Reference(0);
       this.momentarySampleAccumulators[i] ??= new Reference(0);
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
-      this.momentaryLoudnessHistories[i] ??= new Array();
+      this.momentaryLoudnessHistories[i] ??= this.capacity
+        ? new Array()
+        : new CircularBuffer(Math.ceil(this.capacity! / MOMENTARY_HOP_INTERVAL_SEC));
       this.shortTermEnergyRunningSums[i] ??= new Reference(0);
       this.shortTermSampleAccumulators[i] ??= new Reference(0);
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
-      this.shortTermLoudnessHistories[i] ??= new Array();
+      this.shortTermLoudnessHistories[i] ??= this.capacity
+        ? new Array()
+        : new CircularBuffer(Math.ceil(this.capacity! / SHORT_TERM_HOP_INTERVAL_SEC));
       this.metrics[i] ??= {
         momentaryLoudness: Number.NEGATIVE_INFINITY,
         shortTermLoudness: Number.NEGATIVE_INFINITY,
