@@ -253,14 +253,14 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       this.momentarySampleAccumulators[i] ??= new Reference(0);
       this.momentaryEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * MOMENTARY_WINDOW_SEC));
       this.momentaryLoudnessHistories[i] ??= this.capacity
-        ? new Array()
-        : new CircularBuffer(Math.ceil(this.capacity! / MOMENTARY_HOP_INTERVAL_SEC));
+        ? new CircularBuffer(Math.ceil(this.capacity! / MOMENTARY_HOP_INTERVAL_SEC))
+        : new Array();
       this.shortTermEnergyRunningSums[i] ??= new Reference(0);
       this.shortTermSampleAccumulators[i] ??= new Reference(0);
       this.shortTermEnergyBuffers[i] ??= new CircularBuffer(Math.round(sampleRate * SHORT_TERM_WINDOW_SEC));
       this.shortTermLoudnessHistories[i] ??= this.capacity
-        ? new Array()
-        : new CircularBuffer(Math.ceil(this.capacity! / SHORT_TERM_HOP_INTERVAL_SEC));
+        ? new CircularBuffer(Math.ceil(this.capacity! / SHORT_TERM_HOP_INTERVAL_SEC))
+        : new Array();
       this.metrics[i] ??= {
         momentaryLoudness: Number.NEGATIVE_INFINITY,
         shortTermLoudness: Number.NEGATIVE_INFINITY,
