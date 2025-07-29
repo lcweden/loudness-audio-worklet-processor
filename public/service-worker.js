@@ -1,10 +1,10 @@
-const CACHE_NAME = 'v1';
+const CACHE_NAME = "v1";
 
-self.addEventListener('install', () => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -18,8 +18,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') {
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") {
     return;
   }
 
@@ -43,16 +43,16 @@ self.addEventListener('fetch', (event) => {
             });
           })
           .catch(() => {
-            return new Response('Network error occurred', {
+            return new Response("Network error occurred", {
               status: 408,
-              statusText: 'Network error',
+              statusText: "Network error"
             });
           });
       })
       .catch(() => {
-        return new Response('Cache error occurred', {
+        return new Response("Cache error occurred", {
           status: 500,
-          statusText: 'Cache error',
+          statusText: "Cache error"
         });
       })
   );

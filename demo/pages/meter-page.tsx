@@ -1,9 +1,9 @@
-import { Accessor, createEffect, createMemo, createSignal, mergeProps, Setter } from 'solid-js';
-import { AudioLoudnessSnapshot } from '../../types';
-import { FileSelector } from '../components';
-import { createAudioAnalysis, createRange } from '../composables';
-import { LoudnessMetricStats, LoudnessSnapshotsChart, LoudnessSnapshotsTable, SnapshotPlayer } from '../containers';
-import { PlusIcon } from '../icons';
+import { Accessor, createEffect, createMemo, createSignal, mergeProps, Setter } from "solid-js";
+import { AudioLoudnessSnapshot } from "../../types";
+import { FileSelector } from "../components";
+import { createAudioAnalysis, createRange } from "../composables";
+import { LoudnessMetricStats, LoudnessSnapshotsChart, LoudnessSnapshotsTable, SnapshotPlayer } from "../containers";
+import { PlusIcon } from "../icons";
 
 type MeterPageProps = {
   getFile: Accessor<File | undefined>;
@@ -42,8 +42,8 @@ function MeterPage(meterPageProps: MeterPageProps) {
         maximumTruePeakLevel: Number(currentMetric.maximumTruePeakLevel.toFixed(1)),
         maximumMomentaryLoudness: Number(currentMetric.maximumMomentaryLoudness.toFixed(1)),
         maximumShortTermLoudness: Number(currentMetric.maximumShortTermLoudness.toFixed(1)),
-        loudnessRange: Number(currentMetric.loudnessRange.toFixed(1)),
-      })),
+        loudnessRange: Number(currentMetric.loudnessRange.toFixed(1))
+      }))
     };
 
     if (!lastSnapshot || lastSnapshotTime !== formattedSnapshot.currentTime) {

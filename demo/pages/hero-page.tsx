@@ -1,6 +1,6 @@
-import { mergeProps, Setter } from 'solid-js';
-import { FileSelector } from '../components';
-import { PlusIcon } from '../icons';
+import { mergeProps, Setter } from "solid-js";
+import { FileSelector } from "../components";
+import { PlusIcon } from "../icons";
 
 type HeroPageProps = {
   setFile: Setter<File | undefined>;

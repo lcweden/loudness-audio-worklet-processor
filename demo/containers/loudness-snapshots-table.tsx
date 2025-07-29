@@ -1,8 +1,8 @@
-import { Accessor, createEffect, createUniqueId, For, Match, mergeProps, Show, Switch } from 'solid-js';
-import { AudioLoudnessSnapshot } from '../../types';
-import { createPagination, createRange } from '../composables';
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons';
-import { replaceIfEqual } from '../utils';
+import { Accessor, createEffect, createUniqueId, For, Match, mergeProps, Show, Switch } from "solid-js";
+import { AudioLoudnessSnapshot } from "../../types";
+import { createPagination, createRange } from "../composables";
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronLeftIcon, ChevronRightIcon } from "../icons";
+import { replaceIfEqual } from "../utils";
 
 type LoudnessSnapshotsTableProps = {
   getIsProcessing: Accessor<boolean>;
@@ -98,7 +98,7 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
                   return (
                     <tr
                       class={`${
-                        snapshotSelectedRange.isSelected(index) ? 'bg-base-200' : 'bg-base-100'
+                        snapshotSelectedRange.isSelected(index) ? "bg-base-200" : "bg-base-100"
                       } hover:bg-base-200 cursor-pointer`}
                       onclick={() => handleTableRowClick(index)}
                     >
@@ -111,11 +111,11 @@ function LoudnessSnapshotsTable(loudnessSnapshotsTableProps: LoudnessSnapshotsTa
                         />
                       </th>
                       <td>{snapshot.currentTime} ms</td>
-                      <td>{replaceIfEqual(snapshot.currentMetrics[0].momentaryLoudness, -Infinity, '-')}</td>
-                      <td>{replaceIfEqual(snapshot.currentMetrics[0].shortTermLoudness, -Infinity, '-')}</td>
-                      <td>{replaceIfEqual(snapshot.currentMetrics[0].integratedLoudness, -Infinity, '-')}</td>
-                      <td>{replaceIfEqual(snapshot.currentMetrics[0].loudnessRange, -Infinity, '-')}</td>
-                      <td>{replaceIfEqual(snapshot.currentMetrics[0].maximumTruePeakLevel, -Infinity, '-')}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].momentaryLoudness, -Infinity, "-")}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].shortTermLoudness, -Infinity, "-")}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].integratedLoudness, -Infinity, "-")}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].loudnessRange, -Infinity, "-")}</td>
+                      <td>{replaceIfEqual(snapshot.currentMetrics[0].maximumTruePeakLevel, -Infinity, "-")}</td>
                     </tr>
                   );
                 }}

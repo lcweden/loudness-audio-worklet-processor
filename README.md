@@ -10,7 +10,7 @@ A real-time loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-
 2. Place `loudness.worklet.js` in your project directory (e.g., `/public/`).
 
 ```javascript
-audioContext.audioWorklet.addModule('loudness.worklet.js');
+audioContext.audioWorklet.addModule("loudness.worklet.js");
 ```
 
 ### Import
@@ -18,7 +18,7 @@ audioContext.audioWorklet.addModule('loudness.worklet.js');
 Directly import the `AudioWorkletProcessor` file in your code:
 
 ```javascript
-const module = new URL('https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js');
+const module = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
 audioContext.audioWorklet.addModule(module);
 ```
 
@@ -32,18 +32,18 @@ audioContext.audioWorklet.addModule(module);
   <body>
     <pre></pre>
     <script>
-      const pre = document.querySelector('pre');
+      const pre = document.querySelector("pre");
       navigator.mediaDevices.getDisplayMedia({ audio: true }).then((mediaStream) => {
         const context = new AudioContext();
         context.audioWorklet
-          .addModule('https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js')
+          .addModule("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js")
           .then(() => {
             const source = new MediaStreamAudioSourceNode(context, { mediaStream });
-            const worklet = new AudioWorkletNode(context, 'loudness-processor', {
+            const worklet = new AudioWorkletNode(context, "loudness-processor", {
               processorOptions: {
                 interval: 0.1,
-                capacity: 600,
-              },
+                capacity: 600
+              }
             });
 
             source.connect(worklet).port.onmessage = (event) => {
@@ -67,13 +67,13 @@ const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
 const { numberOfChannels, length, sampleRate } = audioBuffer;
 const context = new OfflineAudioContext(numberOfChannels, length, sampleRate);
 
-await context.audioWorklet.addModule('loudness.worklet.js');
+await context.audioWorklet.addModule("loudness.worklet.js");
 
 const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
-const worklet = new AudioWorkletNode(context, 'loudness-processor');
+const worklet = new AudioWorkletNode(context, "loudness-processor");
 
 worklet.port.onmessage = (event) => {
-  console.log('Loudness Data:', event.data);
+  console.log("Loudness Data:", event.data);
 };
 
 source.connect(worklet).connect(context.destination);
@@ -89,17 +89,17 @@ Supports `MediaStream` or `MediaElement` sources:
 ```javascript
 const context = new AudioContext({ sampleRate: 48000 });
 
-await context.audioWorklet.addModule('loudness.worklet.js');
+await context.audioWorklet.addModule("loudness.worklet.js");
 
 const source = new MediaStreamAudioSourceNode(context, { mediaStream: mediaStream });
-const worklet = new AudioWorkletNode(context, 'loudness-processor', {
+const worklet = new AudioWorkletNode(context, "loudness-processor", {
   processorOptions: {
-    capacity: 600, // Seconds of history to keep, prevent memory overflow
-  },
+    capacity: 600 // Seconds of history to keep, prevent memory overflow
+  }
 });
 
 worklet.port.onmessage = (event) => {
-  console.log('Loudness Data:', event.data);
+  console.log("Loudness Data:", event.data);
 };
 
 source.connect(worklet).connect(context.destination);
@@ -121,11 +121,11 @@ The `AudioWorkletNode` constructor accepts the following options:
 #### Example
 
 ```javascript
-const worklet = new AudioWorkletNode(context, 'loudness-processor', {
+const worklet = new AudioWorkletNode(context, "loudness-processor", {
   processorOptions: {
     interval: 0.01,
-    capacity: 600,
-  },
+    capacity: 600
+  }
 });
 ```
 
@@ -146,7 +146,7 @@ type AudioLoudnessSnapshot = {
       maximumShortTermLoudness: number;
       maximumTruePeakLevel: number;
       loudnessRange: number;
-    },
+    }
   ];
 };
 ```

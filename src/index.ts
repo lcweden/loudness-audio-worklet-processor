@@ -1,3 +1,3 @@
-import { LoudnessProcessor } from './loudness-processor';
+import { LoudnessProcessor } from "./loudness-processor";
 
-registerProcessor('loudness-processor', LoudnessProcessor);
+registerProcessor("loudness-processor", LoudnessProcessor);

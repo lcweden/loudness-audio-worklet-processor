@@ -1,6 +1,6 @@
-import { Metrics, Repeat } from '../types';
-import { BiquadraticFilter } from './biquadratic-filter';
-import { CircularBuffer } from './circular-buffer';
+import { Metrics, Repeat } from "../types";
+import { BiquadraticFilter } from "./biquadratic-filter";
+import { CircularBuffer } from "./circular-buffer";
 import {
   ATTENUATION_DB,
   CHANNEL_WEIGHT_FACTORS,
@@ -15,10 +15,10 @@ import {
   MOMENTARY_WINDOW_SEC,
   SHORT_TERM_HOP_INTERVAL_SEC,
   SHORT_TERM_WINDOW_SEC,
-  TRUE_PEAK_COEFFICIENTS,
-} from './constants';
-import { FiniteImpulseResponseFilter } from './finite-impulse-response-filter';
-import { Reference } from './reference';
+  TRUE_PEAK_COEFFICIENTS
+} from "./constants";
+import { FiniteImpulseResponseFilter } from "./finite-impulse-response-filter";
+import { Reference } from "./reference";
 
 /**
  * Loudness Algorithm Implementation (ITU-R BS.1770-5)
@@ -180,7 +180,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
             const sortedLoudnesses = relativeGatedLoudnesses.toSorted((a, b) => a - b);
             const [lowerPercentile, upperPercentile] = [
               LOUDNESS_RANGE_LOWER_PERCENTILE,
-              LOUDNESS_RANGE_UPPER_PERCENTILE,
+              LOUDNESS_RANGE_UPPER_PERCENTILE
             ].map((percentile) => {
               const lowerIndex = Math.floor(percentile * (sortedLoudnesses.length - 1));
               const upperIndex = Math.ceil(percentile * (sortedLoudnesses.length - 1));
@@ -268,7 +268,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         maximumMomentaryLoudness: Number.NEGATIVE_INFINITY,
         maximumShortTermLoudness: Number.NEGATIVE_INFINITY,
         maximumTruePeakLevel: Number.NEGATIVE_INFINITY,
-        loudnessRange: Number.NEGATIVE_INFINITY,
+        loudnessRange: Number.NEGATIVE_INFINITY
       };
 
       this.kWeightingFilters[i].length = inputs[i].length;
@@ -277,14 +277,14 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       for (let j = 0; j < inputs[i].length; j++) {
         this.kWeightingFilters[i][j] ??= [
           new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highshelf.a, K_WEIGHTING_COEFFICIENTS.highshelf.b),
-          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b),
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b)
         ];
 
         this.truePeakFilters[i][j] ??= [
           new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase0),
           new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase1),
           new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase2),
-          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3)
         ];
       }
 
@@ -299,7 +299,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         shortTermEnergyBuffer: this.shortTermEnergyBuffers[i],
         shortTermEnergyRunningSum: this.shortTermEnergyRunningSums[i],
         shortTermLoudnessHistory: this.shortTermLoudnessHistories[i],
-        shortTermSampleAccumulator: this.shortTermSampleAccumulators[i],
+        shortTermSampleAccumulator: this.shortTermSampleAccumulators[i]
       });
     }
   }

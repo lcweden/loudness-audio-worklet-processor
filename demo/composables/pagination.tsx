@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from 'solid-js';
+import { createMemo, createSignal } from "solid-js";
 
 function createPagination<T>(data?: T[], options?: { pageSize: number }) {
   const [getData, setData] = createSignal<T[]>(data || []);
@@ -10,7 +10,7 @@ function createPagination<T>(data?: T[], options?: { pageSize: number }) {
     const pageSize = getPageSize();
 
     if (!data || !pageSize) {
-      throw new Error('Pagination data or pageSize not set');
+      throw new Error("Pagination data or pageSize not set");
     }
 
     return Math.max(1, Math.ceil(data.length / pageSize));
@@ -22,7 +22,7 @@ function createPagination<T>(data?: T[], options?: { pageSize: number }) {
     const currentPage = getCurrentPage();
 
     if (!data || !pageSize) {
-      throw new Error('Pagination data or pageSize not set');
+      throw new Error("Pagination data or pageSize not set");
     }
 
     const start = (currentPage - 1) * pageSize;
@@ -65,7 +65,7 @@ function createPagination<T>(data?: T[], options?: { pageSize: number }) {
     first,
     last,
     prev,
-    next,
+    next
   };
 }
 

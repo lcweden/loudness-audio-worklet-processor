@@ -1,4 +1,4 @@
-import { createUniqueId, JSX, mergeProps } from 'solid-js';
+import { createUniqueId, JSX, mergeProps } from "solid-js";
 
 type FileSelectorProps = {
   class?: string;
@@ -11,7 +11,7 @@ function FileSelector(fileSelectorProps: FileSelectorProps) {
 
   return (
     <label class={props.class} style={props.style}>
-      {props.children || 'Select File'}
+      {props.children || "Select File"}
       <input {...props} id={createUniqueId()} type="file" class="hidden" />
     </label>
   );

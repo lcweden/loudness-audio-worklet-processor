@@ -1,7 +1,7 @@
-import { createSignal, onCleanup, onMount } from 'solid-js';
+import { createSignal, onCleanup, onMount } from "solid-js";
 
-const mode = import.meta.env.MODE as 'development' | 'production';
-const audioWorkletUrl = mode === 'production' ? 'loudness.worklet.js' : new URL('../../src/index.ts', import.meta.url);
+const mode = import.meta.env.MODE as "development" | "production";
+const audioWorkletUrl = mode === "production" ? "loudness.worklet.js" : new URL("../../src/index.ts", import.meta.url);
 
 function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
   const [getBuffer, setBuffer] = createSignal<AudioBuffer>();
@@ -20,7 +20,7 @@ function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
       await offlineAudioContext.audioWorklet.addModule(audioWorkletUrl);
 
       const source = new AudioBufferSourceNode(offlineAudioContext, { buffer: audioBuffer });
-      const worklet = new AudioWorkletNode(offlineAudioContext, 'loudness-processor');
+      const worklet = new AudioWorkletNode(offlineAudioContext, "loudness-processor");
 
       source.connect(worklet);
       source.start();
@@ -31,7 +31,7 @@ function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
 
       await offlineAudioContext.startRendering();
     } catch (error) {
-      throw new Error('Audio analysis failed.', { cause: error });
+      throw new Error("Audio analysis failed.", { cause: error });
     }
   }
 

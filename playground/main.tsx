@@ -1,6 +1,6 @@
-import { createEffect, createSignal } from 'solid-js';
-import { render } from 'solid-js/web';
-import { AudioLoudnessSnapshot } from '../types';
+import { createEffect, createSignal } from "solid-js";
+import { render } from "solid-js/web";
+import { AudioLoudnessSnapshot } from "../types";
 
 function Playground() {
   const [getAudioBuffer, setAudioBuffer] = createSignal<AudioBuffer>();
@@ -36,12 +36,12 @@ function Playground() {
 
     const { length, sampleRate, numberOfChannels } = audioBuffer;
     const context = new OfflineAudioContext(numberOfChannels, length, sampleRate);
-    const module = new URL('../src/index.ts', import.meta.url);
+    const module = new URL("../src/index.ts", import.meta.url);
     context.audioWorklet
       .addModule(module)
       .then(() => {
         const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
-        const worklet = new AudioWorkletNode(context, 'loudness-processor');
+        const worklet = new AudioWorkletNode(context, "loudness-processor");
 
         worklet.port.onmessage = handleAudioWorkletMessage;
 
@@ -65,15 +65,15 @@ function Playground() {
         <h2>Loudness Measurement</h2>
         <dl>
           <dt>Momentary Loudness (LUFS)</dt>
-          <dd>{getSnapshot()?.currentMetrics[0].momentaryLoudness.toFixed(1) ?? '-'}</dd>
+          <dd>{getSnapshot()?.currentMetrics[0].momentaryLoudness.toFixed(1) ?? "-"}</dd>
           <dt>Short-Term Loudness (LUFS)</dt>
-          <dd>{getSnapshot()?.currentMetrics[0].shortTermLoudness.toFixed(1) ?? '-'}</dd>
+          <dd>{getSnapshot()?.currentMetrics[0].shortTermLoudness.toFixed(1) ?? "-"}</dd>
           <dt>Integrated Loudness (LUFS)</dt>
-          <dd>{getSnapshot()?.currentMetrics[0].integratedLoudness.toFixed(1) ?? '-'}</dd>
+          <dd>{getSnapshot()?.currentMetrics[0].integratedLoudness.toFixed(1) ?? "-"}</dd>
           <dt>Loudness Range (LRA)</dt>
-          <dd>{getSnapshot()?.currentMetrics[0].loudnessRange.toFixed(1) ?? '-'}</dd>
+          <dd>{getSnapshot()?.currentMetrics[0].loudnessRange.toFixed(1) ?? "-"}</dd>
           <dt>Maximum True Peak Level (dBTP)</dt>
-          <dd>{getSnapshot()?.currentMetrics[0].maximumTruePeakLevel.toFixed(1) ?? '-'}</dd>
+          <dd>{getSnapshot()?.currentMetrics[0].maximumTruePeakLevel.toFixed(1) ?? "-"}</dd>
         </dl>
         <details open>
           <summary>Raw Data</summary>
@@ -124,4 +124,4 @@ function Playground() {
   );
 }
 
-render(() => <Playground />, document.getElementById('root')!);
+render(() => <Playground />, document.getElementById("root")!);
