@@ -1,7 +1,6 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
-const mode = import.meta.env.MODE as "development" | "production";
-const audioWorkletUrl = mode === "production" ? "loudness.worklet.js" : new URL("../../src/index.ts", import.meta.url);
+const audioWorkletUrl = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
 
 function createAudioAnalysis<T>(callback: (event: MessageEvent<T>) => void) {
   const [getBuffer, setBuffer] = createSignal<AudioBuffer>();
