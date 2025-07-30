@@ -1,4 +1,4 @@
-type Repeat<T, C extends number, Result extends any[] = []> = Result['length'] extends C
+type Repeat<T, C extends number, Result extends any[] = []> = Result["length"] extends C
   ? Result
   : Repeat<T, C, [...Result, T]>;
 

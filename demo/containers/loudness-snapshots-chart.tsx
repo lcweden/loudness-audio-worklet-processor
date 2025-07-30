@@ -1,6 +1,6 @@
-import { Accessor, createEffect, mergeProps, onMount } from 'solid-js';
-import { AudioLoudnessSnapshot, Metrics } from '../../types';
-import { createChart } from '../composables';
+import { Accessor, createEffect, mergeProps, onMount } from "solid-js";
+import { AudioLoudnessSnapshot, Metrics } from "../../types";
+import { createChart } from "../composables";
 
 type LoudnessSnapshotsChartProps = {
   getIsProcessing: Accessor<boolean>;
@@ -12,9 +12,9 @@ function LoudnessSnapshotsChart(loudnessSnapshotsChartProps: LoudnessSnapshotsCh
   const { getSnapshots, getIsProcessFinish, getIsProcessing } = mergeProps(loudnessSnapshotsChartProps);
   const snapshotChart = createChart();
   const legends: Array<[string, keyof Metrics]> = [
-    ['Integrated', 'integratedLoudness'],
-    ['Short-term', 'shortTermLoudness'],
-    ['Momentary', 'momentaryLoudness'],
+    ["Integrated", "integratedLoudness"],
+    ["Short-term", "shortTermLoudness"],
+    ["Momentary", "momentaryLoudness"]
   ];
 
   let chartRef: HTMLDivElement;
@@ -26,26 +26,26 @@ function LoudnessSnapshotsChart(loudnessSnapshotsChartProps: LoudnessSnapshotsCh
     if (isProccessFinish && snapshots) {
       snapshotChart.setIsLoading(false);
       snapshotChart.setOption({
-        tooltip: { trigger: 'axis' },
+        tooltip: { trigger: "axis" },
         xAxis: {
-          type: 'category',
+          type: "category",
           data: snapshots.map((snapshot) => snapshot.currentTime),
-          name: 'Time',
+          name: "Time"
         },
-        yAxis: { type: 'value', name: 'Loudness', min: 'dataMin', max: 'dataMax' },
+        yAxis: { type: "value", name: "Loudness", min: "dataMin", max: "dataMax" },
         series: legends.map(([key, value]) => ({
           name: key,
           data: snapshots.map((snapshot) => {
             const loudness = snapshot.currentMetrics[0][value];
             return loudness === Number.NEGATIVE_INFINITY ? null : loudness;
           }),
-          type: 'line',
+          type: "line",
           smooth: true,
-          emphasis: { focus: 'series' },
+          emphasis: { focus: "series" },
           lineStyle: { width: 4 },
-          sampling: 'lttb',
-          dataZoom: [{ type: 'inside', throttle: 50 }, { type: 'slider' }],
-        })),
+          sampling: "lttb",
+          dataZoom: [{ type: "inside", throttle: 50 }, { type: "slider" }]
+        }))
       });
     }
   });
@@ -55,12 +55,12 @@ function LoudnessSnapshotsChart(loudnessSnapshotsChartProps: LoudnessSnapshotsCh
 
     if (isProccessing) {
       snapshotChart.setIsLoading(true, {
-        text: '',
-        color: '#000000',
+        text: "",
+        color: "#000000",
         fontSize: 24,
         showSpinner: true,
         spinnerRadius: 20,
-        lineWidth: 3,
+        lineWidth: 3
       });
     }
   });

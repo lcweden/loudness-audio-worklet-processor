@@ -1,7 +1,7 @@
-import { Accessor, createEffect, createSignal, Match, mergeProps, onCleanup, Show, Switch } from 'solid-js';
-import { AudioLoudnessSnapshot } from '../../types';
-import { createRange } from '../composables';
-import { PlayIcon, StopIcon, XMarkIcon } from '../icons';
+import { Accessor, createEffect, createSignal, Match, mergeProps, onCleanup, Show, Switch } from "solid-js";
+import { AudioLoudnessSnapshot } from "../../types";
+import { createRange } from "../composables";
+import { PlayIcon, StopIcon, XMarkIcon } from "../icons";
 
 type SnapshotPlayerProps = {
   getFile: Accessor<File | undefined>;

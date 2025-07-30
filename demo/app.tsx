@@ -1,7 +1,7 @@
-import { createSignal, lazy, Show, Suspense } from 'solid-js';
+import { createSignal, lazy, Show, Suspense } from "solid-js";
 
-const MeterPage = lazy(() => import('./pages').then((m) => ({ default: m.MeterPage })));
-const HeroPage = lazy(() => import('./pages').then((m) => ({ default: m.HeroPage })));
+const MeterPage = lazy(() => import("./pages").then((m) => ({ default: m.MeterPage })));
+const HeroPage = lazy(() => import("./pages").then((m) => ({ default: m.HeroPage })));
 
 function App() {
   const [getSelectedFile, setSelectedFile] = createSignal<File>();

@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal } from "solid-js";
 
 export function createRange() {
   const [getRange, setRange] = createSignal<[number, number] | undefined>(undefined);
@@ -18,9 +18,7 @@ export function createRange() {
     } else if (index === range[1]) {
       setRange([index, index]);
     } else {
-      index - range[0] < range[1] - index
-        ? setRange([range[0], index])
-        : setRange([index, range[1]]);
+      index - range[0] < range[1] - index ? setRange([range[0], index]) : setRange([index, range[1]]);
     }
   }
 
@@ -42,6 +40,6 @@ export function createRange() {
     select,
     selectAll,
     clear,
-    isSelected,
+    isSelected
   };
 }

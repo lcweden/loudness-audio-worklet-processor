@@ -1,8 +1,8 @@
-import { LineChart } from 'echarts/charts';
-import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components';
-import * as echarts from 'echarts/core';
-import { CanvasRenderer } from 'echarts/renderers';
-import { createEffect, createSignal, onCleanup } from 'solid-js';
+import { LineChart } from "echarts/charts";
+import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from "echarts/components";
+import * as echarts from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 
 echarts.use([LineChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer]);
 
@@ -27,7 +27,7 @@ function createChart() {
 
     if (chart) {
       if (isLoading) {
-        chart.showLoading('default', options);
+        chart.showLoading("default", options);
       } else {
         chart.hideLoading();
       }
@@ -43,10 +43,10 @@ function createChart() {
       }
     }
 
-    window.addEventListener('resize', resizeHandler);
+    window.addEventListener("resize", resizeHandler);
 
     return () => {
-      window.removeEventListener('resize', resizeHandler);
+      window.removeEventListener("resize", resizeHandler);
     };
   });
 
