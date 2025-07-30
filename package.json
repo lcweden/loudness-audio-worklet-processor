@@ -13,11 +13,11 @@
     "url": "https://github.com/lcweden/loudness-audio-worklet-processor"
   },
   "scripts": {
-    "dev": "VITE_MODE=playground vite",
-    "demo": "VITE_MODE=demo vite",
+    "dev": "vite --mode playground",
+    "demo": "vite --mode demo",
     "test": "vitest",
-    "build": "tsc -b && VITE_MODE=demo vite build && vite build",
-    "preview": "VITE_MODE=demo vite preview",
+    "build": "vite build --mode library && vite build --mode demo",
+    "preview": "vite preview --mode demo",
     "format": "prettier --write ."
   },
   "dependencies": {
