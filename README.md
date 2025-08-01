@@ -1,6 +1,13 @@
 # Loudness Audio Worklet Processor
 
-A real-time loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
+A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
+
+## Features
+
+- **Loudness Measurement**: Compliant with the **ITU-R BS.1770-5** standard.
+- **Comprehensive Metrics**: Calculates Momentary, Short-term, and Integrated Loudness, as well as Loudness Range (LRA) and True-Peak levels.
+- **Flexible**: Works with live audio and pre-recorded files.
+- **Lightweight**: No external dependencies required.
 
 ## Installation
 
@@ -25,6 +32,8 @@ audioContext.audioWorklet.addModule(module);
 ## Quick Start
 
 ### Example
+
+This example demonstrates the easiest way to get started with the Loudness Audio Worklet Processor.
 
 ```html
 <!doctype html>
