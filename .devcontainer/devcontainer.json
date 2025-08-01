@@ -8,7 +8,8 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
-        }
+        },
+        "css.lint.unknownAtRules": "ignore"
       }
     }
   }
