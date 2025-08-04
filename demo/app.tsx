@@ -2,7 +2,7 @@ import { onMount } from "solid-js";
 
 function App() {
   onMount(() => {
-    const isDevMode = import.meta.env.MODE === "development";
+    const isDevMode = import.meta.env.DEV;
     const isServiceWorkerSupported = "serviceWorker" in navigator;
 
     if (isDevMode || !isServiceWorkerSupported) return;
