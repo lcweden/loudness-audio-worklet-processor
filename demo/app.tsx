@@ -1,4 +1,6 @@
+import { Route, Router } from "@solidjs/router";
 import { onMount } from "solid-js";
+import { Home, Meter } from "./pages";
 
 function App() {
   onMount(() => {
@@ -12,7 +14,12 @@ function App() {
     navigator.serviceWorker.register(serviceWorkerURL, serviceWorkerOptions);
   });
 
-  return <div>App</div>;
+  return (
+    <Router>
+      <Route path="/" component={Home} />
+      <Route path="/meter" component={Meter} />
+    </Router>
+  );
 }
 
 export { App };
