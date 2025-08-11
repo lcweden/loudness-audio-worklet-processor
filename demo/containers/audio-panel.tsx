@@ -12,11 +12,20 @@ function AudioPanel(_: AudioPanelProps) {
   function handleFileChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const fileList = target.files;
-    setFileList(fileList || undefined);
+
+    document.startViewTransition(() => {
+      setFileList(fileList || undefined);
+    });
   }
 
   createEffect(() => {
-    if (getFileList()) document.startViewTransition(() => setFile(getFileList()![0]));
+    const files = getFileList();
+
+    if (files) {
+      document.startViewTransition(() => {
+        setFile(files[0]);
+      });
+    }
   });
 
   return (
