@@ -1,16 +1,17 @@
 import { JSX, splitProps } from "solid-js";
 
 type FilePickerProps = {
+  children?: JSX.Element;
   class?: string;
-} & JSX.IntrinsicElements["input"];
+} & JSX.InputHTMLAttributes<HTMLInputElement>;
 
 function FilePicker(filePickerProps: FilePickerProps) {
-  const [props, others] = splitProps(filePickerProps, ["class"]);
+  const [props, others] = splitProps(filePickerProps, ["children", "class"]);
 
   return (
     <label class={props.class}>
-      Select File
-      <input type="file" {...others} class="hidden" />
+      {props.children || "Select File"}
+      <input {...others} type="file" class="hidden" />
     </label>
   );
 }

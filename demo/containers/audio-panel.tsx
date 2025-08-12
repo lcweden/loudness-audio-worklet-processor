@@ -1,25 +1,22 @@
 import { createEffect, createSignal, Show } from "solid-js";
-import { DrawerToggle, FilePicker, Menu, Navbar } from "../components";
-import { MinusCircleIcon, XMarkIcon } from "../icons";
+import { DrawerToggle, DropZone, Menu, Navbar } from "../components";
+import { DocumentPlusIcon, MinusCircleIcon, XMarkIcon } from "../icons";
 import { AudioStats } from "./audio-stats";
 
 type AudioPanelProps = {};
 
 function AudioPanel(_: AudioPanelProps) {
-  const [getFileList, setFileList] = createSignal<FileList>();
+  const [getFiles, setFiles] = createSignal<Array<File>>();
   const [getFile, setFile] = createSignal<File>();
 
-  function handleFileChange(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const fileList = target.files;
-
+  function handleFiles(files: Array<File>) {
     document.startViewTransition(() => {
-      setFileList(fileList || undefined);
+      setFiles(files || undefined);
     });
   }
 
   createEffect(() => {
-    const files = getFileList();
+    const files = getFiles();
 
     if (files) {
       document.startViewTransition(() => {
@@ -46,26 +43,38 @@ function AudioPanel(_: AudioPanelProps) {
         <Show
           when={getFile()}
           fallback={
-            <div role="alert" class="alert alert-vertical">
-              <MinusCircleIcon stroke-width={1.5} class="text-info size-6" />
-              <div>
-                <h3 class="font-bold">Lorem ipsum dolor</h3>
-                <div class="text-xs tracking-wide">Lorem ipsum dolor sit amet consectetur adipiscing elit</div>
+            <DropZone accept="audio/*,video/*" multiple onfiles={handleFiles}>
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <DocumentPlusIcon class="mb-4 size-8" />
+                <p class="mb-2 text-sm">
+                  <span class="font-semibold">Click to upload</span> or drag and drop
+                </p>
+                <p class="mb-2 text-xs">Audio or Video Files</p>
+                <p class="text-base-content/50 text-xs font-thin">All processing is done locally in your browser</p>
               </div>
-              <FilePicker
-                class="btn btn-sm btn-primary"
-                accept="audio/*,video/*"
-                multiple
-                onchange={handleFileChange}
-              />
-            </div>
+            </DropZone>
           }
         >
           <AudioStats getFile={getFile} />
         </Show>
       </div>
 
-      <Menu<File> iterable={getFileList()} title="Lorem ipsum dolor sit amet." class="w-full">
+      <Menu<File>
+        iterable={getFiles()}
+        title="Selected files"
+        class="w-full"
+        fallback={
+          <div role="alert" class="alert p-2">
+            <button class="btn btn-square btn-sm btn-warning">
+              <MinusCircleIcon />
+            </button>
+            <div>
+              <h3 class="font-bold">Your playlist is empty!</h3>
+              <div class="text-xs">Drop or select files to begin.</div>
+            </div>
+          </div>
+        }
+      >
         {(item) => (
           <button classList={{ "menu-active": item.name === getFile()?.name }} onclick={() => setFile(item)}>
             <span class="block truncate text-left">{item.name}</span>
