@@ -5,12 +5,12 @@ type FilePickerProps = {
   class?: string;
 } & JSX.InputHTMLAttributes<HTMLInputElement>;
 
-function FilePicker(filePickerProps: FilePickerProps) {
-  const [props, others] = splitProps(filePickerProps, ["children", "class"]);
+function FilePicker(props: FilePickerProps) {
+  const [local, others] = splitProps(props, ["children", "class"]);
 
   return (
-    <label class={props.class}>
-      {props.children || "Select File"}
+    <label class={local.class}>
+      {local.children || "Select File"}
       <input {...others} type="file" class="hidden" />
     </label>
   );

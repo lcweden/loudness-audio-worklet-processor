@@ -1,38 +1,36 @@
-import { Component, JSX, splitProps } from "solid-js";
+import { JSX, splitProps } from "solid-js";
 import { matchesAcceptedMimeType } from "../utils";
 import { FilePicker } from "./file-picker";
 
-type DropZone = Component<
-  {
-    children?: JSX.Element;
-    onfiles?: (files: Array<File>) => void;
-  } & JSX.InputHTMLAttributes<HTMLInputElement>
->;
+type DropZoneProps = {
+  children?: JSX.Element;
+  onfiles?: (files: Array<File>) => void;
+} & JSX.InputHTMLAttributes<HTMLInputElement>;
 
-const DropZone: DropZone = (props) => {
+function DropZone(props: DropZoneProps) {
   const [local, others] = splitProps(props, ["children", "onfiles"]);
 
-  const handleDragover: JSX.EventHandler<HTMLDivElement, DragEvent> = (event) => {
+  function handleDragover(event: DragEvent) {
     event.preventDefault();
-  };
+  }
 
-  const handleDrop: JSX.EventHandler<HTMLDivElement, DragEvent> = async (event) => {
+  function handleDrop(event: DragEvent) {
     event.preventDefault();
     const files = event.dataTransfer?.files;
 
     if (!files) return;
 
     local.onfiles?.(Array.from(files).filter((file) => matchesAcceptedMimeType(others.accept || "", file)));
-  };
+  }
 
-  const handleChange: JSX.EventHandler<HTMLInputElement, Event> = (event) => {
+  function handleChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const files = target.files;
 
     if (!files) return;
 
     local.onfiles?.(Array.from(files));
-  };
+  }
 
   return (
     <div ondragover={handleDragover} ondrop={handleDrop}>
@@ -45,6 +43,6 @@ const DropZone: DropZone = (props) => {
       </FilePicker>
     </div>
   );
-};
+}
 
 export { DropZone };
