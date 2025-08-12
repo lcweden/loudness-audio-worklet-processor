@@ -35,4 +35,21 @@ function formatChannels(count: number): string {
   }
 }
 
-export { formatChannels, formatFileSize, formatSampleRate };
+function matchesAcceptedMimeType(accept: string, file: File): boolean {
+  const fileType = file.type.toLowerCase();
+  const acceptTypes = accept.split(",").map((type) => type.trim().toLowerCase());
+
+  for (const acceptType of acceptTypes) {
+    if (acceptType === "*") return true;
+    if (acceptType === fileType) return true;
+
+    if (acceptType.endsWith("/*")) {
+      const base = acceptType.split("/")[0];
+      if (fileType.startsWith(base + "/")) return true;
+    }
+  }
+
+  return false;
+}
+
+export { formatChannels, formatFileSize, formatSampleRate, matchesAcceptedMimeType };

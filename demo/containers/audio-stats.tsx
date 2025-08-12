@@ -51,17 +51,27 @@ function AudioStats(props: AudioStatsProps) {
     const file = props.getFile();
 
     if (file) {
-      document.startViewTransition(async () => {
-        const arrayBuffer = await file!.arrayBuffer();
-        const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
-        setAudioBuffer(audioBuffer);
-        setSnapshots([]);
-      });
+      setTimeout(() => {
+        document.startViewTransition(async () => {
+          const arrayBuffer = await file!.arrayBuffer();
+          const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
+          setAudioBuffer(audioBuffer);
+          setSnapshots([]);
+        });
+      }, 100);
     }
   });
 
   return (
-    <Show when={getAudioBuffer()} keyed>
+    <Show
+      when={getAudioBuffer()}
+      keyed
+      fallback={
+        <div class="flex w-full items-center justify-center p-8">
+          <span class="loading loading-xl"></span>
+        </div>
+      }
+    >
       {(audioBuffer) => {
         return (
           <Show when={props.getFile()} keyed>
