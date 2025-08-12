@@ -20,7 +20,7 @@ function Drawer(props: DrawerProps) {
         {props.children}
       </section>
       <section class="drawer-side" style={{ "scrollbar-gutter": "stable" }}>
-        <label for="drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+        <label for={id} aria-label="close sidebar" class="drawer-overlay"></label>
         {props.sidebar}
       </section>
     </div>
