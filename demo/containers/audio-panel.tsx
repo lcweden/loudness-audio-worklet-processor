@@ -31,10 +31,10 @@ function AudioPanel(_: AudioPanelProps) {
         class="from-base-100 via-base-100 sticky top-0 z-10 bg-gradient-to-b via-80% to-transparent"
         start={
           <div class="flex items-center gap-1">
-            <DrawerToggle class="btn btn-square">
+            <DrawerToggle class="btn btn-square btn-sm">
               <XMarkIcon />
             </DrawerToggle>
-            <button class="btn btn-ghost">Loudness Meter</button>
+            <button class="btn btn-ghost btn-sm hidden sm:flex">Loudness Meter</button>
           </div>
         }
       />
@@ -50,7 +50,7 @@ function AudioPanel(_: AudioPanelProps) {
                   <span class="font-semibold">Click to upload</span> or drag and drop
                 </p>
                 <p class="mb-2 text-xs">Audio or Video Files</p>
-                <p class="text-base-content/50 text-xs font-thin">All processing is done locally in your browser</p>
+                <p class="text-base-content/70 text-xs font-thin">All processing is done locally in your browser</p>
               </div>
             </DropZone>
           }
@@ -66,10 +66,10 @@ function AudioPanel(_: AudioPanelProps) {
         fallback={
           <div role="alert" class="alert p-2">
             <button class="btn btn-square btn-sm btn-warning">
-              <MinusCircleIcon />
+              <MinusCircleIcon stroke-width={1.5} />
             </button>
             <div>
-              <h3 class="font-bold">Your playlist is empty!</h3>
+              <h3 class="text-xs font-bold">Your playlist is empty!</h3>
               <div class="text-xs">Drop or select files to begin.</div>
             </div>
           </div>

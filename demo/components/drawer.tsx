@@ -16,9 +16,7 @@ function Drawer(props: DrawerProps) {
   return (
     <div class="drawer lg:drawer-open">
       <input id={id} type="checkbox" class="drawer-toggle" />
-      <section class="drawer-content" style={{ "scrollbar-gutter": "stable" }}>
-        {props.children}
-      </section>
+      <section class="drawer-content">{props.children}</section>
       <section class="drawer-side" style={{ "scrollbar-gutter": "stable" }}>
         <label for={id} aria-label="close sidebar" class="drawer-overlay"></label>
         {props.sidebar}
