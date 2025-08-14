@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import { repository, version } from "../../package.json" with { type: "json" };
+import githubIcon from "../assets/github-mark-white.svg?url";
 
 function Home() {
   return (
@@ -20,8 +21,9 @@ function Home() {
             fugiat veniam occaecat.
           </p>
           <div class="flex items-center justify-center gap-2">
-            <a class="btn btn-neutral" href={repository.url} target="_blank">
-              View on GitHub
+            <a class="btn btn-neutral space-x-1" href={repository.url} target="_blank">
+              <img class="size-4" src={githubIcon} alt="GitHub" />
+              <span>View on GitHub</span>
             </a>
             <A href="/meter" class="btn">
               Try Demo

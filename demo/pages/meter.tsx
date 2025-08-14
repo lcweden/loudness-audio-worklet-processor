@@ -1,3 +1,4 @@
+import { repository } from "../../package.json" with { type: "json" };
 import githubIcon from "../assets/github-mark-white.svg?url";
 import { Drawer, DrawerToggle, Navbar } from "../components";
 import { AudioPanel } from "../containers";
@@ -19,10 +20,7 @@ function Meter() {
           }
           center={<button class="btn btn-sm btn-ghost lg:hidden">Loudness Meter</button>}
           end={
-            <a
-              class="btn btn-neutral btn-sm btn-square"
-              href="https://github.com/lcweden/loudness-audio-worklet-processor"
-            >
+            <a class="btn btn-neutral btn-sm btn-square" href={repository.url} target="_blank">
               <img class="size-5" src={githubIcon} alt="GitHub" />
             </a>
           }
