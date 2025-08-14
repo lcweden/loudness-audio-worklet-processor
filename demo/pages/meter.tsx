@@ -1,3 +1,4 @@
+import githubIcon from "../assets/github-mark-white.svg?url";
 import { Drawer, DrawerToggle, Navbar } from "../components";
 import { AudioPanel } from "../containers";
 import { createLoudnessContext } from "../contexts";
@@ -17,7 +18,14 @@ function Meter() {
             </DrawerToggle>
           }
           center={<button class="btn btn-sm btn-ghost lg:hidden">Loudness Meter</button>}
-          end={<button class="btn btn-sm">GitHub</button>}
+          end={
+            <a
+              class="btn btn-neutral btn-sm btn-square"
+              href="https://github.com/lcweden/loudness-audio-worklet-processor"
+            >
+              <img class="size-5" src={githubIcon} alt="GitHub" />
+            </a>
+          }
         />
         <div class="flex-1">
           <pre>{JSON.stringify(getSnapshots().at(-1), null, 2)}</pre>
