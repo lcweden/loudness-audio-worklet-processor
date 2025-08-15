@@ -12,7 +12,7 @@ function Menu<T>(props: MenuProps<T>) {
   return (
     <ul class={`menu ${props.class}`}>
       <Show when={props.title}>
-        <li class="text-base-content/60 p-4 pb-2 text-xs tracking-wide">{props.title}</li>
+        <li class="text-base-content/60 px-4 py-2 text-xs tracking-wide">{props.title}</li>
       </Show>
 
       <For each={props.iterable ? Array.from(props.iterable) : props.iterable} fallback={props.fallback}>

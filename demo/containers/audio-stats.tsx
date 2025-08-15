@@ -58,7 +58,7 @@ function AudioStats(props: AudioStatsProps) {
           setAudioBuffer(audioBuffer);
           setSnapshots([]);
         });
-      }, 100);
+      }, 500);
     }
   });
 

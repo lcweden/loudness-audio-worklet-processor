@@ -26,15 +26,15 @@ function AudioPanel(_: AudioPanelProps) {
   });
 
   return (
-    <aside class="bg-base-100 min-h-full w-86 shadow">
+    <aside class="bg-base-100 rounded-r-box border-base-300 min-h-full w-86 border-r shadow">
       <Navbar
-        class="from-base-100 via-base-100 sticky top-0 z-10 bg-gradient-to-b via-80% to-transparent"
+        class="from-base-100 via-base-100 rounded-t-box sticky top-0 z-10 bg-gradient-to-b via-80% to-transparent"
         start={
           <div class="flex items-center gap-1">
             <DrawerToggle class="btn btn-square btn-sm">
               <XMarkIcon />
             </DrawerToggle>
-            <button class="btn btn-ghost btn-sm hidden sm:flex">Loudness Meter</button>
+            <button class="btn btn-ghost hidden sm:flex">Loudness Meter</button>
           </div>
         }
       />

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: lofi --default;
-  exclude: rootscrollgutter;
+  themes: silk --default;
+}
+
+html,
+body {
+  scrollbar-gutter: stable;
+  overscroll-behavior: none;
+  scroll-behavior: smooth;
 }
