@@ -36,7 +36,7 @@ function DropZone(props: DropZoneProps) {
     <div ondragover={handleDragover} ondrop={handleDrop}>
       <FilePicker
         {...others}
-        class="border-base-200 hover:border-base-300 hover:bg-base-200 bg-base-100 flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed"
+        class="border-base-300 hover:border-base-300 hover:bg-base-200 bg-base-100 flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed"
         onchange={handleChange}
       >
         {local.children}

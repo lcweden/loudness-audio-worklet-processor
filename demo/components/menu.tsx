@@ -1,9 +1,9 @@
-import { Accessor, For, JSX, Show } from "solid-js";
+import { Accessor, For, JSX } from "solid-js";
 
 type MenuProps<T> = {
   iterable: Iterable<T> | ArrayLike<T> | false | null | undefined;
   class?: string;
-  title?: string;
+  title?: JSX.Element;
   fallback?: JSX.Element;
   children: (item: T, index: Accessor<number>) => JSX.Element;
 };
@@ -11,10 +11,7 @@ type MenuProps<T> = {
 function Menu<T>(props: MenuProps<T>) {
   return (
     <ul class={`menu ${props.class}`}>
-      <Show when={props.title}>
-        <li class="text-base-content/60 px-4 py-2 text-xs tracking-wide">{props.title}</li>
-      </Show>
-
+      {props.title}
       <For each={props.iterable ? Array.from(props.iterable) : props.iterable} fallback={props.fallback}>
         {(item, index) => <li>{props.children(item, index)}</li>}
       </For>

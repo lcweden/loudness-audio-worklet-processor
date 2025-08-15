@@ -15,14 +15,22 @@ function AudioPanel(_: AudioPanelProps) {
     });
   }
 
+  function handleFileClear(_: MouseEvent) {
+    document.startViewTransition(() => {
+      setFiles([]);
+    });
+  }
+
   createEffect(() => {
     const files = getFiles();
 
-    if (files) {
-      document.startViewTransition(() => {
+    document.startViewTransition(() => {
+      if (files) {
         setFile(files[0]);
-      });
-    }
+      } else {
+        setFile(undefined);
+      }
+    });
   });
 
   return (
@@ -60,9 +68,16 @@ function AudioPanel(_: AudioPanelProps) {
       </div>
 
       <Menu<File>
-        iterable={getFiles()}
-        title="Selected files"
         class="w-full"
+        iterable={getFiles()}
+        title={
+          <li class="text-base-content/60 flex flex-row items-center justify-between py-2 pl-4 text-xs tracking-wide">
+            Selected Files
+            <button class="btn btn-xs btn-ghost" onclick={handleFileClear}>
+              Clear
+            </button>
+          </li>
+        }
         fallback={
           <div role="alert" class="alert p-2">
             <button class="btn btn-square btn-sm btn-warning">

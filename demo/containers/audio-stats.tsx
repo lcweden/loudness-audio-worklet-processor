@@ -80,7 +80,7 @@ function AudioStats(props: AudioStatsProps) {
               const { duration, length, sampleRate, numberOfChannels } = audioBuffer;
 
               return (
-                <div class="border-neutral rounded-box space-y-8 border p-4">
+                <div class="rounded-box bg-base-200 border-base-300 space-y-8 border p-4 shadow">
                   <div>
                     <p class="text-md truncate tracking-wider">{name}</p>
                     <p class="text-base-content/60 text-xs">{formatFileSize(size)}</p>
