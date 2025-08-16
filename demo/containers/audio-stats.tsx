@@ -35,6 +35,7 @@ function AudioStats(props: AudioStatsProps) {
     if (!audioBuffer) return;
 
     setIsLoading(true);
+    setSnapshots([]);
 
     const module = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
     const loudnessService = new LoudnessService(module);
