@@ -1,4 +1,4 @@
-import { createSignal, useContext } from "solid-js";
+import { useContext } from "solid-js";
 import { LoudnessContext } from "../contexts";
 import LoudnessService from "../services/loudness.service";
 
@@ -11,10 +11,11 @@ function createLoudnessMeter() {
     throw new Error("createLoudnessContext must be used within a LoudnessProvider");
   }
 
-  const [getSnapshots, setSnapshots] = context;
-  const [getIsProcessing, setIsProcessing] = createSignal<boolean>(false);
-  const [getIsFinished, setIsFinished] = createSignal<boolean>(false);
-  const [getError, setError] = createSignal<Error>();
+  const { snapshots, isProcessing, isFinished, error } = context;
+  const [getSnapshots, setSnapshots] = snapshots;
+  const [getIsProcessing, setIsProcessing] = isProcessing;
+  const [getIsFinished, setIsFinished] = isFinished;
+  const [getError, setError] = error;
 
   function reset() {
     setSnapshots([]);
