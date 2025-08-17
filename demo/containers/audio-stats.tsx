@@ -1,4 +1,4 @@
-import { Accessor, createEffect, createMemo, createSignal, Show } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createLoudnessMeter } from "../hooks";
 import { formatChannels, formatFileSize, formatSampleRate } from "../utils";
 
@@ -29,21 +29,24 @@ function AudioStats(props: AudioStatsProps) {
 
   function handleMeasurementStart() {
     const buffer = getAudioBuffer();
-    if (buffer) start(buffer);
+    if (!buffer) return;
+
+    reset();
+    start(buffer);
   }
 
-  createEffect(() => {
-    const file = props.getFile();
-
-    if (file) {
-      document.startViewTransition(async () => {
-        const arrayBuffer = await file!.arrayBuffer();
-        const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
-        setAudioBuffer(audioBuffer);
-        reset();
-      });
-    }
-  });
+  createEffect(
+    on(props.getFile, (file) => {
+      if (file) {
+        document.startViewTransition(async () => {
+          const arrayBuffer = await file!.arrayBuffer();
+          const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
+          setAudioBuffer(audioBuffer);
+          reset();
+        });
+      }
+    })
+  );
 
   return (
     <Show

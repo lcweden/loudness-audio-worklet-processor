@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, on, Show } from "solid-js";
 import { DrawerToggle, DropZone, Menu, Navbar } from "../components";
 import { DocumentPlusIcon, MinusCircleIcon, XMarkIcon } from "../icons";
 import { AudioStats } from "./audio-stats";
@@ -21,17 +21,17 @@ function AudioPanel(_: AudioPanelProps) {
     });
   }
 
-  createEffect(() => {
-    const files = getFiles();
-
-    document.startViewTransition(() => {
-      if (files) {
-        setFile(files[0]);
-      } else {
-        setFile(undefined);
-      }
-    });
-  });
+  createEffect(
+    on(getFiles, (files) => {
+      document.startViewTransition(() => {
+        if (files) {
+          setFile(files[0]);
+        } else {
+          setFile(undefined);
+        }
+      });
+    })
+  );
 
   return (
     <aside class="bg-base-100 rounded-r-box border-base-300 min-h-full w-86 border-r shadow">
@@ -47,7 +47,7 @@ function AudioPanel(_: AudioPanelProps) {
         }
       />
 
-      <div class="px-2">
+      <div class="p-2">
         <Show
           when={getFile()}
           fallback={
