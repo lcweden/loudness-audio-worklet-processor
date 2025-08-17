@@ -1,31 +1,18 @@
-import { Accessor, createContext, createSignal, JSX, Setter, useContext } from "solid-js";
+import { createContext, createSignal, JSX, Signal } from "solid-js";
 import { AudioLoudnessSnapshot } from "../../types";
 
 type LoudnessProviderProps = {
   children: JSX.Element;
 };
 
-type LoudnessContextType = [
-  getSnapshots: Accessor<Array<AudioLoudnessSnapshot>>,
-  setSnapshots: Setter<Array<AudioLoudnessSnapshot>>
-];
+type LoudnessContextType = Signal<Array<AudioLoudnessSnapshot>>;
 
 const LoudnessContext = createContext<LoudnessContextType>();
 
-function createLoudnessContext() {
-  const context = useContext(LoudnessContext);
-
-  if (!context) {
-    throw new Error("createLoudnessContext must be used within a LoudnessProvider");
-  }
-
-  return context;
-}
-
-function LoudnessProvider(props: LoudnessProviderProps) {
+function LoudnessProvider(props: LoudnessProviderProps): JSX.Element {
   const [getSnapshots, setSnapshots] = createSignal<Array<AudioLoudnessSnapshot>>([]);
 
   return <LoudnessContext.Provider value={[getSnapshots, setSnapshots]}>{props.children}</LoudnessContext.Provider>;
 }
 
-export { createLoudnessContext, LoudnessProvider };
+export { LoudnessContext, LoudnessProvider };

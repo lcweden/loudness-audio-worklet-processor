@@ -1,6 +1,5 @@
 import { Accessor, createEffect, createMemo, createSignal, Show } from "solid-js";
-import { createLoudnessContext } from "../contexts";
-import LoudnessService from "../services/loudness.service";
+import { createLoudnessMeter } from "../hooks";
 import { formatChannels, formatFileSize, formatSampleRate } from "../utils";
 
 type AudioStatsProps = {
@@ -8,11 +7,10 @@ type AudioStatsProps = {
 };
 
 function AudioStats(props: AudioStatsProps) {
-  const [getSnapshots, setSnapshots] = createLoudnessContext();
+  const { start, reset, getIsProcessing, getIsFinished, getSnapshots } = createLoudnessMeter();
   const [getAudioBuffer, setAudioBuffer] = createSignal<AudioBuffer>();
-  const [getIsLoading, setIsLoading] = createSignal<boolean>(false);
   const getPercentage = createMemo<number>(handlePercentageChange);
-  const getState = createMemo<"READY" | "LOADING" | "FINISHED">(handleStateChange);
+  const getState = createMemo<"READY" | "PROCESSING" | "FINISHED">(handleStateChange);
 
   function handlePercentageChange() {
     const buffer = getAudioBuffer();
@@ -24,42 +22,26 @@ function AudioStats(props: AudioStatsProps) {
   }
 
   function handleStateChange() {
-    if (getIsLoading()) return "LOADING";
-    if (getPercentage() === 100) return "FINISHED";
+    if (getIsProcessing()) return "PROCESSING";
+    if (getIsFinished()) return "FINISHED";
     return "READY";
   }
 
-  async function handleMeasurementStart() {
-    const audioBuffer = getAudioBuffer();
-
-    if (!audioBuffer) return;
-
-    setIsLoading(true);
-    setSnapshots([]);
-
-    const module = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
-    const loudnessService = new LoudnessService(module);
-
-    await loudnessService.measure(audioBuffer, (event) => {
-      const snapshot = event.data;
-      setSnapshots((prev) => [...prev, snapshot]);
-    });
-
-    setIsLoading(false);
+  function handleMeasurementStart() {
+    const buffer = getAudioBuffer();
+    if (buffer) start(buffer);
   }
 
   createEffect(() => {
     const file = props.getFile();
 
     if (file) {
-      setTimeout(() => {
-        document.startViewTransition(async () => {
-          const arrayBuffer = await file!.arrayBuffer();
-          const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
-          setAudioBuffer(audioBuffer);
-          setSnapshots([]);
-        });
-      }, 500);
+      document.startViewTransition(async () => {
+        const arrayBuffer = await file!.arrayBuffer();
+        const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
+        setAudioBuffer(audioBuffer);
+        reset();
+      });
     }
   });
 
@@ -92,7 +74,7 @@ function AudioStats(props: AudioStatsProps) {
                       class="badge badge-sm"
                       classList={{
                         "badge-info": getState() === "READY",
-                        "badge-warning": getState() === "LOADING",
+                        "badge-warning": getState() === "PROCESSING",
                         "badge-success": getState() === "FINISHED"
                       }}
                     >
@@ -123,10 +105,10 @@ function AudioStats(props: AudioStatsProps) {
 
                   <button
                     class="btn btn-block btn-primary btn-sm"
-                    disabled={getIsLoading()}
+                    disabled={getIsProcessing()}
                     onclick={handleMeasurementStart}
                   >
-                    {getState() === "LOADING" ? <span class="loading loading-spinner loading-sm" /> : "Start"}
+                    {getState() === "PROCESSING" ? <span class="loading loading-spinner loading-sm" /> : "Start"}
                   </button>
                 </div>
               );
