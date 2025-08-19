@@ -36,7 +36,7 @@ function createLoudnessMeter() {
       setIsFinished(false);
       await service.measure(buffer, (event) => {
         const snapshot = event.data;
-        setSnapshots((prev) => [...prev, snapshot]);
+        setSnapshots((prev) => (prev.push(snapshot), prev));
       });
     } catch (reason) {
       setIsProcessing(false);

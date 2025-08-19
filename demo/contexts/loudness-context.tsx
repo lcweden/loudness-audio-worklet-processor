@@ -15,7 +15,7 @@ type LoudnessContextType = {
 const LoudnessContext = createContext<LoudnessContextType>();
 
 function LoudnessProvider(props: LoudnessProviderProps): JSX.Element {
-  const [getSnapshots, setSnapshots] = createSignal<Array<AudioLoudnessSnapshot>>([]);
+  const [getSnapshots, setSnapshots] = createSignal<Array<AudioLoudnessSnapshot>>([], { equals: false });
   const [getIsProcessing, setIsProcessing] = createSignal<boolean>(false);
   const [getIsFinished, setIsFinished] = createSignal<boolean>(false);
   const [getError, setError] = createSignal<Error>();
