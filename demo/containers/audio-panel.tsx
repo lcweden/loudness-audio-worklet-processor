@@ -42,7 +42,9 @@ function AudioPanel(_: AudioPanelProps) {
             <DrawerToggle class="btn btn-square btn-sm">
               <XMarkIcon />
             </DrawerToggle>
-            <button class="btn btn-ghost hidden sm:flex">Loudness Meter</button>
+            <a class="btn btn-ghost hidden sm:flex" href="/">
+              Loudness Meter
+            </a>
           </div>
         }
       />
