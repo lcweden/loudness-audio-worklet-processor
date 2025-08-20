@@ -1,10 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 @plugin "daisyui" {
   themes: silk --default;
 }
+@theme {
+  --font-urbanist: "Urbanist", sans-serif;
+}
 
 html,
 body {
+  font-family: var(--font-urbanist);
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   scroll-behavior: smooth;

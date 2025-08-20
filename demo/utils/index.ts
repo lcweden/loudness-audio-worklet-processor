@@ -52,4 +52,8 @@ function matchesAcceptedMimeType(accept: string, file: File): boolean {
   return false;
 }
 
-export { formatChannels, formatFileSize, formatSampleRate, matchesAcceptedMimeType };
+function replace<T>(array: T[], target: T, value: T): T[] {
+  return array.map((item) => (item === target ? value : item));
+}
+
+export { formatChannels, formatFileSize, formatSampleRate, matchesAcceptedMimeType, replace };

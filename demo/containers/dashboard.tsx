@@ -1,33 +1,123 @@
-import { createMemo, For, Show } from "solid-js";
+import * as echarts from "echarts";
+import { createEffect, createMemo, For, on, onCleanup, onMount, Show } from "solid-js";
 import { Stat } from "../components";
-import { createLoudnessContext } from "../contexts";
+import { createLoudnessMeter } from "../hooks";
+import { replace } from "../utils";
 
 function Dashboard() {
-  const [getSnapshots] = createLoudnessContext();
+  const { getSnapshots, getIsProcessing, getIsFinished } = createLoudnessMeter();
   const getSnapshot = createMemo(() => getSnapshots().at(-1));
+  let container: HTMLDivElement;
+  let observer: ResizeObserver;
+  let chart: echarts.ECharts;
+
+  createEffect(
+    on(getIsProcessing, (isProcessing) => {
+      if (!chart) return;
+
+      if (isProcessing) {
+        chart.showLoading("default", {
+          text: "",
+          color: "#000000",
+          maskColor: "transparent",
+          zlevel: 0,
+          fontSize: 24,
+          showSpinner: true,
+          spinnerRadius: 12,
+          lineWidth: 3
+        });
+      } else {
+        chart.hideLoading();
+      }
+    })
+  );
+
+  createEffect(
+    on([getIsFinished, getSnapshots], ([isFinished, snapshots]) => {
+      if (!isFinished || !snapshots) return;
+
+      const times = snapshots.map((v) => v.currentTime.toFixed(1));
+      const momentaryLoudness = snapshots.map((v) => Number(v.currentMetrics[0].momentaryLoudness.toFixed(2)));
+      const shortTermLoudness = snapshots.map((v) => Number(v.currentMetrics[0].shortTermLoudness.toFixed(2)));
+      const integratedLoudness = snapshots.map((v) => Number(v.currentMetrics[0].integratedLoudness.toFixed(2)));
+
+      chart.setOption({
+        tooltip: {
+          extraCssText: "rounded-box",
+          trigger: "axis",
+          backgroundColor: "oklch(95% 0.0081 61.42)",
+          borderColor: "oklch(90% 0.0081 61.42)",
+          borderWidth: 2,
+          borderRadius: 16
+        },
+        xAxis: { type: "category", data: times, axisLabel: { formatter: "{value} s" } },
+        yAxis: { type: "value", scale: true, axisLabel: { formatter: "{value} LUFS" } },
+        series: [
+          {
+            name: "Momentary Loudness",
+            data: replace(momentaryLoudness, Number.NEGATIVE_INFINITY, null),
+            type: "line",
+            smooth: true,
+            showSymbol: false
+          },
+          {
+            name: "Short Term Loudness",
+            data: replace(shortTermLoudness, Number.NEGATIVE_INFINITY, null),
+            type: "line",
+            smooth: true,
+            showSymbol: false
+          },
+          {
+            name: "Integrated Loudness",
+            data: replace(integratedLoudness, Number.NEGATIVE_INFINITY, null),
+            type: "line",
+            smooth: true,
+            showSymbol: false
+          }
+        ],
+        dataZoom: [
+          { type: "slider", start: 0, end: 100 },
+          { type: "inside", start: 0, end: 100 }
+        ]
+      });
+    })
+  );
+
+  onMount(() => {
+    chart = echarts.init(container);
+    observer = new ResizeObserver(() => chart.resize());
+    observer.observe(container);
+  });
+
+  onCleanup(() => {
+    observer.unobserve(container);
+    chart.dispose();
+  });
 
   return (
-    <div class="flex flex-col gap-4">
-      <div class="flex items-center gap-4 px-2">
-        <div class="flex items-center gap-2">
-          <p class="text-xs">TIME:</p>
-          <div class="badge badge-sm">
-            <Show when={getSnapshot()} fallback={"-"} keyed>
-              {(snapshot) => snapshot.currentTime.toFixed(1) + "s"}
-            </Show>
+    <div class="flex flex-col gap-4 p-2">
+      <div class="flex items-center justify-between pl-4">
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <p class="text-xs">TIME:</p>
+            <div class="badge badge-sm">
+              <Show when={getSnapshot()} fallback={"-"} keyed>
+                {(snapshot) => snapshot.currentTime.toFixed(1) + "s"}
+              </Show>
+            </div>
           </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <p class="text-xs">FRAME:</p>
-          <div class="badge badge-sm">
-            <Show when={getSnapshot()} fallback={"-"} keyed>
-              {(snapshot) => snapshot.currentFrame}
-            </Show>
+          <div class="flex items-center gap-2">
+            <p class="text-xs">FRAME:</p>
+            <div class="badge badge-sm">
+              <Show when={getSnapshot()} fallback={"-"} keyed>
+                {(snapshot) => snapshot.currentFrame}
+              </Show>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-2 px-2 sm:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <For
           each={[
             { key: "loudnessRange", title: "Loudness Range", description: "LRA" },
@@ -49,6 +139,8 @@ function Dashboard() {
           )}
         </For>
       </div>
+
+      <div class="rounded-box border-base-200 h-96 w-full border shadow" ref={(e) => (container = e)} />
     </div>
   );
 }

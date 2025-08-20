@@ -9,7 +9,7 @@ function Meter() {
     <Drawer sidebar={<AudioPanel />}>
       <main class="flex h-full w-full flex-col">
         <Navbar
-          class="from-base-100 via-base-100 sticky top-0 z-10 bg-gradient-to-b via-80% to-transparent"
+          class="from-base-100 via-base-100 sticky top-0 z-1 bg-gradient-to-b via-80% to-transparent"
           start={
             <DrawerToggle class="btn btn-square btn-sm">
               <SquaresIcon />

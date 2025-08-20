@@ -16,7 +16,9 @@ class LoudnessService {
     await context.audioWorklet.addModule(this.module);
 
     const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
-    const worklet = new AudioWorkletNode(context, "loudness-processor");
+    const worklet = new AudioWorkletNode(context, "loudness-processor", {
+      processorOptions: { interval: 0.01 }
+    });
 
     worklet.port.onmessage = onmessage;
 
