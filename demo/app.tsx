@@ -1,6 +1,7 @@
 import { Route, Router } from "@solidjs/router";
 import { onMount } from "solid-js";
 import { LoudnessProvider } from "./contexts";
+import { EnvironmentProvider } from "./contexts/environment-context";
 import { Home, Meter } from "./pages";
 
 function App() {
@@ -16,12 +17,14 @@ function App() {
   });
 
   return (
-    <LoudnessProvider>
-      <Router>
-        <Route path="/" component={Home} />
-        <Route path="/meter" component={Meter} />
-      </Router>
-    </LoudnessProvider>
+    <EnvironmentProvider>
+      <LoudnessProvider>
+        <Router>
+          <Route path="/" component={Home} />
+          <Route path="/meter" component={Meter} />
+        </Router>
+      </LoudnessProvider>
+    </EnvironmentProvider>
   );
 }
 

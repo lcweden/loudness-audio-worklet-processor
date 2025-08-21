@@ -1,5 +1,5 @@
 import { Accessor, createEffect, createMemo, createSignal, on, Show } from "solid-js";
-import { createLoudnessMeter } from "../hooks";
+import { createLoudness } from "../hooks";
 import { formatChannels, formatFileSize, formatSampleRate } from "../utils";
 
 type AudioStatsProps = {
@@ -7,7 +7,7 @@ type AudioStatsProps = {
 };
 
 function AudioStats(props: AudioStatsProps) {
-  const { start, reset, getIsProcessing, getIsFinished, getSnapshots } = createLoudnessMeter();
+  const { start, reset, getIsProcessing, getIsFinished, getSnapshots } = createLoudness();
   const [getAudioBuffer, setAudioBuffer] = createSignal<AudioBuffer>();
   const getPercentage = createMemo<number>(handlePercentageChange);
   const getState = createMemo<"READY" | "PROCESSING" | "FINISHED">(handleStateChange);

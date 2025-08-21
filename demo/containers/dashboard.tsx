@@ -1,11 +1,11 @@
 import * as echarts from "echarts";
 import { createEffect, createMemo, For, on, onCleanup, onMount, Show } from "solid-js";
 import { Stat } from "../components";
-import { createLoudnessMeter } from "../hooks";
+import { createLoudness } from "../hooks";
 import { replace } from "../utils";
 
 function Dashboard() {
-  const { getSnapshots, getIsProcessing, getIsFinished } = createLoudnessMeter();
+  const { getSnapshots, getIsProcessing, getIsFinished } = createLoudness();
   const getSnapshot = createMemo(() => getSnapshots().at(-1));
   let container: HTMLDivElement;
   let observer: ResizeObserver;
