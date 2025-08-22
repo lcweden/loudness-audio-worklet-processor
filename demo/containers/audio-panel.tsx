@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { DrawerToggle, DropZone, Menu, Navbar } from "../components";
 import { DocumentPlusIcon, MinusCircleIcon, XMarkIcon } from "../icons";
@@ -42,9 +43,9 @@ function AudioPanel(_: AudioPanelProps) {
             <DrawerToggle class="btn btn-square btn-sm">
               <XMarkIcon />
             </DrawerToggle>
-            <a class="btn btn-ghost hidden sm:flex" href="/">
+            <A class="btn btn-ghost hidden sm:flex" href="/">
               Loudness Meter
-            </a>
+            </A>
           </div>
         }
       />

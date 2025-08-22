@@ -1,5 +1,15 @@
 import { render } from "solid-js/web";
 import { App } from "./app";
+import { EnvironmentProvider, LoudnessProvider } from "./contexts";
 import "./index.css";
 
-render(() => <App />, document.getElementById("app")!);
+render(
+  () => (
+    <EnvironmentProvider>
+      <LoudnessProvider>
+        <App />
+      </LoudnessProvider>
+    </EnvironmentProvider>
+  ),
+  document.getElementById("app")!
+);

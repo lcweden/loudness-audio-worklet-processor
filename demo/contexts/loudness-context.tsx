@@ -19,7 +19,7 @@ type LoudnessProviderProps = {
 const LoudnessContext = createContext<LoudnessContextType | null>(null);
 
 function LoudnessProvider(props: LoudnessProviderProps) {
-  const { isDev } = createEnvironment();
+  const { dev } = createEnvironment();
   const [getSnapshots, setSnapshots] = createSignal<Array<AudioLoudnessSnapshot>>([], { equals: false });
   const [getIsProcessing, setIsProcessing] = createSignal(false);
   const [getIsFinished, setIsFinished] = createSignal(false);
@@ -27,7 +27,7 @@ function LoudnessProvider(props: LoudnessProviderProps) {
 
   const local = new URL("../../src/index.ts", import.meta.url);
   const remote = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
-  const service = new LoudnessService(isDev ? local : remote);
+  const service = new LoudnessService(dev ? local : remote);
 
   function reset() {
     setSnapshots([]);

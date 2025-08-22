@@ -1,30 +1,26 @@
 import { Route, Router } from "@solidjs/router";
 import { onMount } from "solid-js";
-import { LoudnessProvider } from "./contexts";
-import { EnvironmentProvider } from "./contexts/environment-context";
+import { createEnvironment } from "./hooks";
 import { Home, Meter } from "./pages";
 
 function App() {
+  const { dev, base } = createEnvironment();
+
   onMount(() => {
-    const isDevMode = import.meta.env.DEV;
     const isServiceWorkerSupported = "serviceWorker" in navigator;
 
-    if (isDevMode || !isServiceWorkerSupported) return;
+    if (dev || !isServiceWorkerSupported) return;
 
-    const serviceWorkerURL = new URL("./service-worker.ts", import.meta.url);
-    const serviceWorkerOptions = { type: "module" as WorkerType, scope: "/loudness-audio-worklet-processor/" };
+    const serviceWorkerURL = new URL(`${base}service-worker.js`, import.meta.url);
+    const serviceWorkerOptions = { type: "module" as WorkerType, scope: base };
     navigator.serviceWorker.register(serviceWorkerURL, serviceWorkerOptions);
   });
 
   return (
-    <EnvironmentProvider>
-      <LoudnessProvider>
-        <Router>
-          <Route path="/" component={Home} />
-          <Route path="/meter" component={Meter} />
-        </Router>
-      </LoudnessProvider>
-    </EnvironmentProvider>
+    <Router base={base.slice(0, -1)}>
+      <Route path="/" component={Home} />
+      <Route path="/meter" component={Meter} />
+    </Router>
   );
 }
 
