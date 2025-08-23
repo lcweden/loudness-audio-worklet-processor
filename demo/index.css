@@ -1,15 +1,44 @@
 @import url("https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: silk --default;
-}
-@theme {
-  --font-urbanist: "Urbanist", sans-serif;
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "default";
+  default: true;
+  prefersdark: true;
+  color-scheme: light;
+  --color-base-100: color-mix(in oklch, oklch(99% 0 0) 85%, #eaf2ff 15%);
+  --color-base-200: color-mix(in oklch, oklch(97% 0 0) 80%, #eaf2ff 20%);
+  --color-base-300: color-mix(in oklch, oklch(95% 0 0) 70%, #eaf2ff 30%);
+  --color-base-content: oklch(16% 0.01 260);
+  --color-primary: #007aff;
+  --color-primary-content: #ffffff;
+  --color-secondary: #5ac8fa;
+  --color-secondary-content: #0a0a0a;
+  --color-accent: #af52de;
+  --color-accent-content: #ffffff;
+  --color-neutral: rgb(36, 36, 38);
+  --color-neutral-content: rgb(235, 235, 240);
+  --color-info: #5ac8fa;
+  --color-info-content: #0a0a0a;
+  --color-success: #34c759;
+  --color-success-content: #0a0a0a;
+  --color-warning: #ffcc00;
+  --color-warning-content: #1c1c1e;
+  --color-error: #ff3b30;
+  --color-error-content: #ffffff;
+  --radius-selector: 1rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 html,
 body {
-  font-family: var(--font-urbanist);
+  font-family: "Urbanist", sans-serif;
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   scroll-behavior: smooth;
