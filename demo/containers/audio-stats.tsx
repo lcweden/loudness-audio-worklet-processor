@@ -62,14 +62,17 @@ function AudioStats(props: AudioStatsProps) {
         return (
           <Show when={props.getFile()} keyed>
             {(file) => {
-              const { name, size } = file;
+              const { name, type, size } = file;
               const { duration, length, sampleRate, numberOfChannels } = audioBuffer;
 
               return (
                 <div class="rounded-box bg-base-200 border-base-300 space-y-8 border p-4 shadow">
                   <div>
                     <p class="text-md truncate tracking-wider">{name}</p>
-                    <p class="text-base-content/60 text-xs">{formatFileSize(size)}</p>
+                    <div class="flex items-center gap-2">
+                      <span class="badge badge-xs">{type}</span>
+                      <p class="text-base-content/60 text-xs">{formatFileSize(size)}</p>
+                    </div>
                   </div>
 
                   <div class="flex flex-col items-center justify-center gap-2">
@@ -84,7 +87,7 @@ function AudioStats(props: AudioStatsProps) {
                       {getState()}
                     </div>
                     <progress
-                      class="progress outline-base-300 w-full bg-transparent outline outline-offset-1"
+                      class="progress outline-base-300 text-base-content/30 w-full bg-transparent outline outline-offset-1"
                       value={getPercentage()}
                       max="100"
                     />

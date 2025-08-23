@@ -15,7 +15,6 @@ function Meter() {
               <SquaresIcon />
             </DrawerToggle>
           }
-          center={<button class="btn btn-ghost lg:hidden">Loudness Meter</button>}
           end={
             <a class="btn btn-neutral btn-sm btn-square" href={repository.url} target="_blank">
               <img class="size-5" src={githubIcon} alt="GitHub" />

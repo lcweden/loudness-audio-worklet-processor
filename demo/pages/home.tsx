@@ -4,7 +4,7 @@ import githubIcon from "../assets/github-mark-white.svg?url";
 
 function Home() {
   return (
-    <div class="hero bg-base-200 min-h-screen">
+    <div class="hero bg-base-100 min-h-screen">
       <div class="hero-content text-center">
         <div class="flex max-w-xl flex-col items-center gap-12">
           <a
@@ -20,12 +20,12 @@ function Home() {
             Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui lorem cupidatat commodo. Elit sunt amet
             fugiat veniam occaecat.
           </p>
-          <div class="flex items-center justify-center gap-2">
+          <div class="flex items-center justify-center gap-1">
             <a class="btn btn-neutral space-x-1" href={repository.url} target="_blank">
               <img class="size-4" src={githubIcon} alt="GitHub" />
               <span>View on GitHub</span>
             </a>
-            <A href="/meter" class="btn">
+            <A href="/meter" class="btn btn-ghost">
               Try Demo
             </A>
           </div>

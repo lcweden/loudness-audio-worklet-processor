@@ -5,7 +5,7 @@ import { createLoudness } from "../hooks";
 import { replace } from "../utils";
 
 function Dashboard() {
-  const { getSnapshots, getIsProcessing, getIsFinished } = createLoudness();
+  const { getSnapshots, getIsProcessing, getIsFinished, reset } = createLoudness();
   const getSnapshot = createMemo(() => getSnapshots().at(-1));
   let container: HTMLDivElement;
   let observer: ResizeObserver;
@@ -34,7 +34,7 @@ function Dashboard() {
 
   createEffect(
     on([getIsFinished, getSnapshots], ([isFinished, snapshots]) => {
-      if (!isFinished || !snapshots) return;
+      if (!isFinished || !snapshots || !chart) return;
 
       const times = snapshots.map((v) => v.currentTime.toFixed(1));
       const momentaryLoudness = snapshots.map((v) => Number(v.currentMetrics[0].momentaryLoudness.toFixed(2)));
@@ -92,6 +92,7 @@ function Dashboard() {
   onCleanup(() => {
     observer.unobserve(container);
     chart.dispose();
+    reset();
   });
 
   return (

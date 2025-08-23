@@ -1,12 +1,12 @@
 import { A } from "@solidjs/router";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { DrawerToggle, DropZone, Menu, Navbar } from "../components";
+import { createLoudness } from "../hooks";
 import { DocumentPlusIcon, MinusCircleIcon, XMarkIcon } from "../icons";
 import { AudioStats } from "./audio-stats";
 
-type AudioPanelProps = {};
-
-function AudioPanel(_: AudioPanelProps) {
+function AudioPanel() {
+  const { getIsProcessing } = createLoudness();
   const [getFiles, setFiles] = createSignal<Array<File>>();
   const [getFile, setFile] = createSignal<File>();
 
@@ -71,12 +71,12 @@ function AudioPanel(_: AudioPanelProps) {
       </div>
 
       <Menu<File>
-        class="w-full"
+        class="w-full p-2"
         iterable={getFiles()}
         title={
           <li class="text-base-content/60 flex flex-row items-center justify-between py-2 pl-4 text-xs tracking-wide">
             Selected Files
-            <button class="btn btn-xs btn-ghost" onclick={handleFileClear}>
+            <button class="btn btn-xs btn-ghost" disabled={getIsProcessing()} onclick={handleFileClear}>
               Clear
             </button>
           </li>
@@ -84,7 +84,7 @@ function AudioPanel(_: AudioPanelProps) {
         fallback={
           <div role="alert" class="alert p-2">
             <button class="btn btn-square btn-sm btn-warning">
-              <MinusCircleIcon stroke-width={1.5} />
+              <MinusCircleIcon />
             </button>
             <div>
               <h3 class="text-xs font-bold">Your playlist is empty!</h3>
