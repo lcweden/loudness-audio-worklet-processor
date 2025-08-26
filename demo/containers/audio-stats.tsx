@@ -1,20 +1,15 @@
-import { Accessor, createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { createLoudness } from "../hooks";
 import { formatChannels, formatFileSize, formatSampleRate } from "../utils";
 
-type AudioStatsProps = {
-  getFile: Accessor<File | undefined>;
-};
-
-function AudioStats(props: AudioStatsProps) {
-  const { start, reset, getIsProcessing, getIsFinished, getSnapshots } = createLoudness();
-  const [getAudioBuffer, setAudioBuffer] = createSignal<AudioBuffer>();
+function AudioStats() {
+  const { start, getFile, getAudioBuffer, getIsProcessing, getIsFinished, getSnapshot, getError } = createLoudness();
   const getPercentage = createMemo<number>(handlePercentageChange);
   const getState = createMemo<"READY" | "PROCESSING" | "FINISHED">(handleStateChange);
 
   function handlePercentageChange() {
     const buffer = getAudioBuffer();
-    const snapshot = getSnapshots().at(-1);
+    const snapshot = getSnapshot();
 
     if (!buffer || !snapshot) return 0;
 
@@ -26,27 +21,6 @@ function AudioStats(props: AudioStatsProps) {
     if (getIsFinished()) return "FINISHED";
     return "READY";
   }
-
-  function handleMeasurementStart() {
-    const buffer = getAudioBuffer();
-    if (!buffer) return;
-
-    reset();
-    start(buffer);
-  }
-
-  createEffect(
-    on(props.getFile, (file) => {
-      if (file) {
-        document.startViewTransition(async () => {
-          const arrayBuffer = await file!.arrayBuffer();
-          const audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
-          setAudioBuffer(audioBuffer);
-          reset();
-        });
-      }
-    })
-  );
 
   return (
     <Show
@@ -60,7 +34,7 @@ function AudioStats(props: AudioStatsProps) {
     >
       {(audioBuffer) => {
         return (
-          <Show when={props.getFile()} keyed>
+          <Show when={getFile()} keyed>
             {(file) => {
               const { name, type, size } = file;
               const { duration, length, sampleRate, numberOfChannels } = audioBuffer;
@@ -109,11 +83,7 @@ function AudioStats(props: AudioStatsProps) {
                     ))}
                   </div>
 
-                  <button
-                    class="btn btn-block btn-primary btn-sm"
-                    disabled={getIsProcessing()}
-                    onclick={handleMeasurementStart}
-                  >
+                  <button class="btn btn-block btn-primary btn-sm" disabled={getIsProcessing()} onclick={start}>
                     {getState() === "PROCESSING" ? <span class="loading loading-spinner loading-sm" /> : "Start"}
                   </button>
                 </div>

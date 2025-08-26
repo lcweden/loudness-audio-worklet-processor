@@ -1,15 +1,20 @@
-import { Accessor, createContext, createSignal, JSX } from "solid-js";
+import { Accessor, createContext, createEffect, createMemo, createSignal, JSX, on, Setter } from "solid-js";
 import { AudioLoudnessSnapshot } from "../../types";
 import { createEnvironment } from "../hooks";
 import { LoudnessService } from "../services";
 
 type LoudnessContextType = {
-  start: (buffer: AudioBuffer) => Promise<void>;
+  start: () => Promise<void>;
   reset: () => void;
-  getSnapshots: Accessor<Array<AudioLoudnessSnapshot>>;
+  getMode: Accessor<"FILE" | "LIVE">;
+  getFile: Accessor<File | null>;
+  getAudioBuffer: Accessor<AudioBuffer | null>;
   getIsProcessing: Accessor<boolean>;
   getIsFinished: Accessor<boolean>;
-  getError: Accessor<Error | undefined>;
+  getSnapshots: Accessor<Array<AudioLoudnessSnapshot>>;
+  getSnapshot: Accessor<AudioLoudnessSnapshot | undefined>;
+  getError: Accessor<Error | null>;
+  setFile: Setter<File | null>;
 };
 
 type LoudnessProviderProps = {
@@ -20,39 +25,47 @@ const LoudnessContext = createContext<LoudnessContextType | null>(null);
 
 function LoudnessProvider(props: LoudnessProviderProps) {
   const { dev } = createEnvironment();
-  const [getSnapshots, setSnapshots] = createSignal<Array<AudioLoudnessSnapshot>>([], { equals: false });
-  const [getIsProcessing, setIsProcessing] = createSignal(false);
-  const [getIsFinished, setIsFinished] = createSignal(false);
-  const [getError, setError] = createSignal<Error>();
+  const [getMode] = createSignal<"FILE" | "LIVE">("FILE");
+  const [getFile, setFile] = createSignal<File | null>(null);
+  const [getAudioBuffer, setAudioBuffer] = createSignal<AudioBuffer | null>(null);
+  const [getIsProcessing, setIsProcessing] = createSignal<boolean>(false);
+  const [getIsFinished, setIsFinished] = createSignal<boolean>(false);
+  const [getSnapshots, setSnapshots] = createSignal<Array<AudioLoudnessSnapshot>>([]);
+  const [getError, setError] = createSignal<Error | null>(null);
+  const getSnapshot = createMemo(() => getSnapshots().at(-1));
 
   const local = new URL("../../src/index.ts", import.meta.url);
   const remote = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
   const service = new LoudnessService(dev ? local : remote);
+  const context = new AudioContext();
 
   function reset() {
     setSnapshots([]);
     setIsProcessing(false);
     setIsFinished(false);
-    setError(undefined);
+    setError(null);
   }
 
-  async function start(buffer: AudioBuffer) {
+  async function start() {
     if (getIsProcessing()) return;
-    if (!buffer) {
-      setError(new Error("No audio buffer provided"));
-      return;
-    }
+
+    reset();
 
     setIsProcessing(true);
     setIsFinished(false);
-    setError(undefined);
+    setError(null);
 
     try {
-      await service.measure(buffer, (event) => {
-        const snapshot = event.data as AudioLoudnessSnapshot;
-        setSnapshots((prev) => [...prev, snapshot]);
-      });
-      setIsFinished(true);
+      if (getMode() === "FILE") {
+        const buffer = getAudioBuffer();
+        if (!buffer) throw new Error("No audio buffer available");
+
+        await service.measure(buffer, (event) => {
+          const snapshot = event.data as AudioLoudnessSnapshot;
+          setSnapshots((prev) => [...prev, snapshot]);
+        });
+        setIsFinished(true);
+      }
     } catch (reason) {
       setError(new Error("Failed to process audio", { cause: reason }));
       setIsFinished(true);
@@ -61,15 +74,31 @@ function LoudnessProvider(props: LoudnessProviderProps) {
     }
   }
 
+  createEffect(
+    on(getFile, async (file) => {
+      if (file) {
+        const arrayBuffer = await file!.arrayBuffer();
+        const audioBuffer = await context.decodeAudioData(arrayBuffer);
+        setAudioBuffer(audioBuffer);
+        reset();
+      }
+    })
+  );
+
   return (
     <LoudnessContext.Provider
       value={{
         start,
         reset,
-        getSnapshots,
+        getMode,
+        getFile,
+        getAudioBuffer,
         getIsProcessing,
         getIsFinished,
-        getError
+        getSnapshots,
+        getSnapshot,
+        getError,
+        setFile
       }}
     >
       {props.children}

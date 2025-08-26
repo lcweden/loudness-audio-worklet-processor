@@ -6,9 +6,8 @@ import { DocumentPlusIcon, MinusCircleIcon, XMarkIcon } from "../icons";
 import { AudioStats } from "./audio-stats";
 
 function AudioPanel() {
-  const { getIsProcessing } = createLoudness();
+  const { setFile, getFile, getIsProcessing } = createLoudness();
   const [getFiles, setFiles] = createSignal<Array<File>>();
-  const [getFile, setFile] = createSignal<File>();
 
   function handleFiles(files: Array<File>) {
     document.startViewTransition(() => {
@@ -25,11 +24,7 @@ function AudioPanel() {
   createEffect(
     on(getFiles, (files) => {
       document.startViewTransition(() => {
-        if (files) {
-          setFile(files[0]);
-        } else {
-          setFile(undefined);
-        }
+        files ? setFile(files[0]) : setFile(null);
       });
     })
   );
@@ -66,7 +61,7 @@ function AudioPanel() {
             </DropZone>
           }
         >
-          <AudioStats getFile={getFile} />
+          <AudioStats />
         </Show>
       </div>
 
