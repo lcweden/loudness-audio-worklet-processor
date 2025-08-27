@@ -1,4 +1,4 @@
-import { createMemo, Show } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 import { createLoudness } from "../hooks";
 import { formatChannels, formatFileSize, formatSampleRate } from "../utils";
 
@@ -19,37 +19,29 @@ function AudioStats() {
   function handleStateChange() {
     if (getIsProcessing()) return "PROCESSING";
     if (getIsFinished()) return "FINISHED";
+
     return "READY";
   }
 
   return (
-    <Show
-      when={getAudioBuffer()}
-      keyed
-      fallback={
-        <div class="flex w-full items-center justify-center p-8">
-          <span class="loading loading-xl"></span>
-        </div>
-      }
-    >
-      {(audioBuffer) => {
-        return (
-          <Show when={getFile()} keyed>
-            {(file) => {
-              const { name, type, size } = file;
-              const { duration, length, sampleRate, numberOfChannels } = audioBuffer;
+    <Show when={getFile()} keyed={true}>
+      {(file) => (
+        <div class="card bg-base-200 shadow-sm">
+          <div class="card-body">
+            <div class="flex flex-col gap-1">
+              <p class="truncate text-lg tracking-wider">{file.name}</p>
+              <div class="flex items-center gap-2">
+                <span class="badge badge-sm badge-neutral badge-soft">{file.type}</span>
+                <p class="text-base-content/60 text-sm">{formatFileSize(file.size)}</p>
+              </div>
+            </div>
 
-              return (
-                <div class="rounded-box bg-base-200 border-base-300 space-y-8 border p-4 shadow">
-                  <div>
-                    <p class="text-md truncate tracking-wider">{name}</p>
-                    <div class="flex items-center gap-2">
-                      <span class="badge badge-xs">{type}</span>
-                      <p class="text-base-content/60 text-xs">{formatFileSize(size)}</p>
-                    </div>
-                  </div>
-
-                  <div class="flex flex-col items-center justify-center gap-2">
+            <Show
+              when={getError()}
+              keyed={true}
+              fallback={
+                <>
+                  <div class="mt-8 flex flex-col items-center justify-center gap-2">
                     <div
                       class="badge badge-sm"
                       classList={{
@@ -67,31 +59,43 @@ function AudioStats() {
                     />
                   </div>
 
-                  <div class="grid grid-cols-4 text-center">
-                    {[
-                      `${duration.toFixed(1)} s`,
-                      length,
-                      formatSampleRate(sampleRate),
-                      formatChannels(numberOfChannels)
-                    ].map((value, index) => (
-                      <div class="space-y-0.5">
-                        <p class="text-base-content/60 text-xs">
-                          {["Duration", "Length", "Sample Rate", "Channel"][index]}
-                        </p>
-                        <p class="text-xs">{value}</p>
+                  <Show when={getAudioBuffer()} keyed={true}>
+                    {(buffer) => (
+                      <div class="mt-8 grid grid-cols-4 text-center">
+                        <For
+                          each={[
+                            `${buffer.duration.toFixed(1)} s`,
+                            buffer.length,
+                            formatSampleRate(buffer.sampleRate),
+                            formatChannels(buffer.numberOfChannels)
+                          ]}
+                        >
+                          {(value, index) => (
+                            <div class="space-y-0.5">
+                              <p class="text-base-content/60 text-xs">
+                                {["Duration", "Length", "Sample Rate", "Channel"][index()]}
+                              </p>
+                              <p class="text-xs">{value}</p>
+                            </div>
+                          )}
+                        </For>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </Show>
 
-                  <button class="btn btn-block btn-primary btn-sm" disabled={getIsProcessing()} onclick={start}>
-                    {getState() === "PROCESSING" ? <span class="loading loading-spinner loading-sm" /> : "Start"}
-                  </button>
-                </div>
-              );
-            }}
-          </Show>
-        );
-      }}
+                  <div class="mt-6">
+                    <button class="btn btn-block btn-primary" disabled={getIsProcessing()} onclick={start}>
+                      {getState() === "PROCESSING" ? <span class="loading loading-spinner loading-sm" /> : "Start"}
+                    </button>
+                  </div>
+                </>
+              }
+            >
+              {(error) => <p class="text-error mt-2 text-xs">{error.message}</p>}
+            </Show>
+          </div>
+        </div>
+      )}
     </Show>
   );
 }

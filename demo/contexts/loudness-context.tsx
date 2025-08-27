@@ -77,10 +77,14 @@ function LoudnessProvider(props: LoudnessProviderProps) {
   createEffect(
     on(getFile, async (file) => {
       if (file) {
-        const arrayBuffer = await file!.arrayBuffer();
-        const audioBuffer = await context.decodeAudioData(arrayBuffer);
-        setAudioBuffer(audioBuffer);
-        reset();
+        try {
+          const arrayBuffer = await file!.arrayBuffer();
+          const audioBuffer = await context.decodeAudioData(arrayBuffer);
+          setAudioBuffer(audioBuffer);
+          reset();
+        } catch (error) {
+          setError(new Error("Failed to load audio file", { cause: error }));
+        }
       }
     })
   );
