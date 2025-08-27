@@ -50,6 +50,7 @@ function Dashboard() {
           borderWidth: 2,
           borderRadius: 16
         },
+        legend: { top: 0, textStyle: { fontSize: 12 }, icon: "pin" },
         xAxis: { type: "category", data: times, axisLabel: { formatter: "{value} s" } },
         yAxis: { type: "value", scale: true, axisLabel: { formatter: "{value} LUFS" } },
         series: [
@@ -102,7 +103,7 @@ function Dashboard() {
           <div class="flex items-center gap-2">
             <p class="text-xs">TIME:</p>
             <div class="badge badge-sm">
-              <Show when={getSnapshot()} fallback={"-"} keyed>
+              <Show when={getSnapshot()} fallback={"-"} keyed={true}>
                 {(snapshot) => snapshot.currentTime.toFixed(1) + "s"}
               </Show>
             </div>
@@ -110,7 +111,7 @@ function Dashboard() {
           <div class="flex items-center gap-2">
             <p class="text-xs">FRAME:</p>
             <div class="badge badge-sm">
-              <Show when={getSnapshot()} fallback={"-"} keyed>
+              <Show when={getSnapshot()} fallback={"-"} keyed={true}>
                 {(snapshot) => snapshot.currentFrame}
               </Show>
             </div>
@@ -132,7 +133,7 @@ function Dashboard() {
               title={title}
               description={description}
               value={
-                <Show when={getSnapshot()} fallback={"-"} keyed>
+                <Show when={getSnapshot()} fallback={"-"} keyed={true}>
                   {(snapshot) => (snapshot.currentMetrics[0] as Record<typeof key, number>)[key].toFixed(1)}
                 </Show>
               }
@@ -141,7 +142,31 @@ function Dashboard() {
         </For>
       </div>
 
-      <div class="rounded-box border-base-200 h-96 w-full border shadow" ref={(e) => (container = e)} />
+      <div class="rounded-box border-base-200 flex h-96 w-full flex-col border shadow">
+        <div class="flex items-center justify-between p-4">
+          <p class="text-base-content/60 text-xs">Chart</p>
+          <Show when={getSnapshot()} keyed={true}>
+            {(snapshot) => (
+              <div class="flex items-center gap-2">
+                <p class="flex items-center gap-2 text-xs">
+                  MAX-M:
+                  <span class="badge badge-soft badge-accent badge-sm">
+                    {snapshot.currentMetrics[0].maximumMomentaryLoudness.toFixed(1)}
+                  </span>
+                </p>
+                <p class="flex items-center gap-2 text-xs">
+                  MAX-S:
+                  <span class="badge badge-soft badge-accent badge-sm">
+                    {snapshot.currentMetrics[0].maximumShortTermLoudness.toFixed(1)}
+                  </span>
+                </p>
+              </div>
+            )}
+          </Show>
+        </div>
+
+        <div class="flex-1" ref={(e) => (container = e)} />
+      </div>
     </div>
   );
 }
