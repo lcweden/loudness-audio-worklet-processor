@@ -1,5 +1,5 @@
 {
-  "image": "node:latest",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
   "customizations": {
     "vscode": {
       "extensions": ["esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"],
@@ -8,8 +8,10 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
-        }
+        },
+        "css.lint.unknownAtRules": "ignore"
       }
     }
-  }
+  },
+  "forwardPorts": [5173]
 }

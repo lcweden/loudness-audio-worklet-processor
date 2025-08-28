@@ -1,59 +1,53 @@
 const CACHE_NAME = "v1";
+const REQUESTS = [
+  "/loudness-audio-worklet-processor/",
+  "/loudness-audio-worklet-processor/index.html",
+  "/loudness-audio-worklet-processor/manifest.json",
+  "/loudness-audio-worklet-processor/assets/index-*.js",
+  "/loudness-audio-worklet-processor/assets/index-*.css"
+];
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
+function handleInstall(event) {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(REQUESTS);
+    })()
   );
-});
+}
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
-    return;
-  }
+function handleActivate(event) {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
 
-  if (new URL(event.request.url).origin !== location.origin) {
-    return;
-  }
-
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
+      for (const key of keys) {
+        if (key !== CACHE_NAME) {
+          await caches.delete(key);
         }
-
-        return fetch(event.request)
-          .then((networkResponse) => {
-            return caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
-              return networkResponse;
-            });
-          })
-          .catch(() => {
-            return new Response("Network error occurred", {
-              status: 408,
-              statusText: "Network error"
-            });
-          });
-      })
-      .catch(() => {
-        return new Response("Cache error occurred", {
-          status: 500,
-          statusText: "Cache error"
-        });
-      })
+      }
+    })()
   );
-});
+}
+
+function handleFetch(event) {
+  event.respondWith(
+    (async () => {
+      const cachedResponse = await caches.match(event.request);
+
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      const fetchResponse = await fetch(event.request);
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(event.request, fetchResponse.clone());
+
+      return fetchResponse;
+    })()
+  );
+}
+
+self.addEventListener("install", handleInstall);
+self.addEventListener("activate", handleActivate);
+self.addEventListener("fetch", handleFetch);

@@ -1,2 +1,2 @@
-export { HeroPage } from "./hero-page";
-export { MeterPage } from "./meter-page";
+export { default as Home } from "./home";
+export { default as Meter } from "./meter";

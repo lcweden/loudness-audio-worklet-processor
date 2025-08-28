@@ -1,6 +1,15 @@
 # Loudness Audio Worklet Processor
 
-A real-time loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
+A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
+
+![screenshot](https://github.com/lcweden/loudness-audio-worklet-processor/blob/rebuild/demo-application/public/screenshots/meter.png)
+
+## Features
+
+- **Loudness Measurement**: Compliant with the **ITU-R BS.1770-5** standard.
+- **Comprehensive Metrics**: Calculates Momentary, Short-term, and Integrated Loudness, as well as Loudness Range (LRA) and True-Peak levels.
+- **Flexible**: Works with live audio and pre-recorded files.
+- **Lightweight**: No external dependencies required.
 
 ## Installation
 
@@ -25,6 +34,8 @@ audioContext.audioWorklet.addModule(module);
 ## Quick Start
 
 ### Example
+
+This example demonstrates the easiest way to get started with the Loudness Audio Worklet Processor.
 
 ```html
 <!doctype html>
@@ -167,6 +178,7 @@ type AudioLoudnessSnapshot = {
 
 Supported channel counts: `1`,`2`,`6`,`8`,`10`,`12`,`24`
 
+> [!NOTE]
 > Channel counts not listed above are weighted by `1.0`.
 
 ## Validation
@@ -225,6 +237,9 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 | 1770Conf-12channels_23LKFS           | -23.0 LKFS  | 12       | :white_check_mark: |
 | 1770Conf-24channels_24LKFS           | -24.0 LKFS  | 24       | :white_check_mark: |
 | 1770Conf-24channels_23LKFS           | -23.0 LKFS  | 24       | :white_check_mark: |
+
+> [!TIP]
+> Try different browsers if audio can not decode.
 
 ### EBU TECH 3341 Minimum requirements test signals
 
