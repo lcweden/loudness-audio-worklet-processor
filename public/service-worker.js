@@ -1,5 +1,11 @@
 const CACHE_NAME = "v1";
-const REQUESTS = ["/"];
+const REQUESTS = [
+  "/loudness-audio-worklet-processor/",
+  "/loudness-audio-worklet-processor/index.html",
+  "/loudness-audio-worklet-processor/manifest.json",
+  "/loudness-audio-worklet-processor/assets/index-*.js",
+  "/loudness-audio-worklet-processor/assets/index-*.css"
+];
 
 function handleInstall(event) {
   event.waitUntil(
