@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (() => {
+        const BASE = "/loudness-audio-worklet-processor";
+        const path = location.pathname;
+
+        if (path === BASE + "/") {
+          return;
+        }
+
+        location.replace(BASE + "/");
+      })();
+    </script>
+  </head>
+</html>
