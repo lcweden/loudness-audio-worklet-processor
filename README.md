@@ -2,7 +2,7 @@
 
 A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
 
-![screenshot](https://github.com/lcweden/loudness-audio-worklet-processor/blob/rebuild/demo-application/public/screenshots/meter.png)
+![screenshot](https://github.com/lcweden/loudness-audio-worklet-processor/blob/main/public/screenshots/meter.png)
 
 ## Features
 
