@@ -1,8 +1,39 @@
 {
+  "id": "/loudness-audio-worklet-processor/",
+  "start_url": "/loudness-audio-worklet-processor/",
+  "scope": "/loudness-audio-worklet-processor/",
   "name": "Loudness Meter",
   "short_name": "Loudness Meter",
   "description": "A loudness meter, based on the ITU-R BS.1770-5 standard.",
   "display": "standalone",
-  "start_url": "/loudness-audio-worklet-processor/",
-  "scope": "/loudness-audio-worklet-processor/"
+  "display_override": ["standalone", "window-controls-overlay"],
+  "background_color": "#FBF8F9",
+  "theme_color": "#FBF8F9",
+  "icons": [
+    {
+      "src": "icons/512.png",
+      "sizes": "512x512",
+      "purpose": "monochrome maskable"
+    },
+    {
+      "src": "icons/1024.png",
+      "sizes": "1024x1024",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./screenshots/home.png",
+      "sizes": "2560x1440",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Home screen showing main navigation"
+    },
+    {
+      "src": "./screenshots/meter.png",
+      "sizes": "2560x1440",
+      "type": "image/png",
+      "label": "Dashboard view displaying key metrics"
+    }
+  ]
 }

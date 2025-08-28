@@ -1,10 +1,11 @@
 import { Route, Router } from "@solidjs/router";
-import { onMount } from "solid-js";
+import { lazy, onMount } from "solid-js";
 import { createEnvironment } from "./hooks";
-import { Home, Meter } from "./pages";
 
 function App() {
   const { dev, base } = createEnvironment();
+  const Home = lazy(() => import("./pages/home"));
+  const Meter = lazy(() => import("./pages/meter"));
 
   onMount(() => {
     const isServiceWorkerSupported = "serviceWorker" in navigator;
