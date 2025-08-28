@@ -1,8 +1,15 @@
-/* @refresh reload */
 import { render } from "solid-js/web";
-import { App } from "./app.tsx";
+import { App } from "./app";
+import { EnvironmentProvider, LoudnessProvider } from "./contexts";
 import "./index.css";
 
-const root = document.getElementById("root");
-
-render(() => <App />, root!);
+render(
+  () => (
+    <EnvironmentProvider>
+      <LoudnessProvider>
+        <App />
+      </LoudnessProvider>
+    </EnvironmentProvider>
+  ),
+  document.getElementById("app")!
+);

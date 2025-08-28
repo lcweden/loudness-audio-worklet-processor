@@ -37,7 +37,7 @@ const addBanner = (): Plugin => {
   };
 };
 
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(({ mode, command, isPreview }) => {
   if (mode === "library") {
     return {
       build: {
@@ -66,7 +66,12 @@ export default defineConfig(({ mode, command }) => {
       outDir: "../dist",
       emptyOutDir: false
     },
-    base: command === "build" ? "/loudness-audio-worklet-processor/" : "/"
+    base:
+      command === "build"
+        ? "/loudness-audio-worklet-processor/"
+        : isPreview
+          ? "/loudness-audio-worklet-processor/"
+          : "/"
   };
 
   return appConfig;
