@@ -1,6 +1,6 @@
 # Loudness Audio Worklet Processor
 
-A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard, implemented as an AudioWorkletProcessor.
+A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard and implemented as an AudioWorkletProcessor.
 
 [![screenshot](https://github.com/lcweden/loudness-audio-worklet-processor/blob/main/public/screenshots/meter.png)](https://lcweden.github.io/loudness-audio-worklet-processor/)
 
@@ -24,7 +24,7 @@ audioContext.audioWorklet.addModule("loudness.worklet.js");
 
 ### Import
 
-Directly import the `AudioWorkletProcessor` file in your code:
+Import the `AudioWorkletProcessor` directly in your code:
 
 ```javascript
 const module = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
@@ -35,7 +35,7 @@ audioContext.audioWorklet.addModule(module);
 
 ### Example
 
-This example demonstrates the easiest way to get started with the Loudness Audio Worklet Processor.
+This example shows the easiest way to get started with the Loudness Audio Worklet Processor.
 
 ```html
 <!doctype html>
@@ -176,10 +176,10 @@ type AudioLoudnessSnapshot = {
 
 ### Supported Channels
 
-Supported channel counts: `1`,`2`,`6`,`8`,`10`,`12`,`24`
+Supported channel counts: `1`, `2`, `6`, `8`, `10`, `12`, `24`
 
 > [!NOTE]
-> Channel counts not listed above are weighted by `1.0`.
+> Channel counts not listed above are weighted at `1.0`.
 
 ## Validation
 
@@ -239,7 +239,7 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 | 1770Conf-24channels_23LKFS           | -23.0 LKFS  | 24       | :white_check_mark: |
 
 > [!TIP]
-> Try different browsers if audio can not decode.
+> If decoding fails, try a different browser.
 
 ### EBU TECH 3341 Minimum requirements test signals
 
