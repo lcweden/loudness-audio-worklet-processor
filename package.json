@@ -1,6 +1,6 @@
 {
   "name": "loudness-audio-worklet-processor",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "description": "An AudioWorkletProcessor implementing the loudness algorithm (ITU-R BS.1770-5).",
   "private": true,
   "type": "module",
