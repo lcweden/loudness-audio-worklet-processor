@@ -17,7 +17,13 @@ class LoudnessService {
 
     const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
     const worklet = new AudioWorkletNode(context, "loudness-processor", {
-      processorOptions: { interval: 0.01 }
+      numberOfInputs: 1,
+      numberOfOutputs: 1,
+      outputChannelCount: [numberOfChannels],
+      processorOptions: {
+        capacity: length / sampleRate,
+        interval: 0.01
+      }
     });
 
     worklet.port.onmessage = onmessage;
