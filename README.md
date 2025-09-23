@@ -45,12 +45,15 @@ This example shows the easiest way to get started with the Loudness Audio Workle
     <script>
       const pre = document.querySelector("pre");
       navigator.mediaDevices.getDisplayMedia({ audio: true }).then((mediaStream) => {
+        const audioTrack = mediaStream.getAudioTracks()[0];
+        const { channelCount } = audioTrack.getSettings();
         const context = new AudioContext();
         context.audioWorklet
           .addModule("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js")
           .then(() => {
             const source = new MediaStreamAudioSourceNode(context, { mediaStream });
             const worklet = new AudioWorkletNode(context, "loudness-processor", {
+              outputChannelCount: [channelCount],
               processorOptions: {
                 interval: 0.1,
                 capacity: 600
@@ -81,7 +84,9 @@ const context = new OfflineAudioContext(numberOfChannels, length, sampleRate);
 await context.audioWorklet.addModule("loudness.worklet.js");
 
 const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
-const worklet = new AudioWorkletNode(context, "loudness-processor");
+const worklet = new AudioWorkletNode(context, "loudness-processor", {
+  outputChannelCount: [numberOfChannels]
+});
 
 worklet.port.onmessage = (event) => {
   console.log("Loudness Data:", event.data);
@@ -102,8 +107,12 @@ const context = new AudioContext({ sampleRate: 48000 });
 
 await context.audioWorklet.addModule("loudness.worklet.js");
 
-const source = new MediaStreamAudioSourceNode(context, { mediaStream: mediaStream });
+const audioTrack = mediaStream.getAudioTracks()[0];
+const { channelCount } = audioTrack.getSettings();
+
+const source = new MediaStreamAudioSourceNode(context, { mediaStream });
 const worklet = new AudioWorkletNode(context, "loudness-processor", {
+  outputChannelCount: [channelCount],
   processorOptions: {
     capacity: 600 // Seconds of history to keep, prevent memory overflow
   }
@@ -124,18 +133,25 @@ The `AudioWorkletNode` constructor accepts the following options:
 
 #### Params
 
-| Option   | Type     | Default | Description                                                                                                                                                                      |
-| -------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| interval | `number` | `0`     | Message interval in seconds.                                                                                                                                                     |
-| capacity | `number` | `null`  | Maximum seconds of history to keep. If set to `null`, the processor will not limit the history size. This is useful for preventing memory overflow in long-running measurements. |
+| Option                    | Type       | Required | Default | Description                                                                                                    |
+| ------------------------- | ---------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| numberOfInputs            | `number`   | `N`      | `1`     | Number of input channels.                                                                                      |
+| numberOfOutputs           | `number`   | `N`      | `1`     | Number of output channels.                                                                                     |
+| outputChannelCount        | `number[]` | `N`      | `[24]`  | An array specifying the number of channels for each output. fallback to 24, provide for the best optimization. |
+| processorOptions.interval | `number`   | `N`      | `null`  | Message interval in seconds.                                                                                   |
+| processorOptions.capacity | `number`   | `N`      | `null`  | Maximum seconds of history to keep. If set to `null`, the processor will not limit the history size.           |
 
 #### Example
 
 ```javascript
+const { numberOfChannels, length, sampleRate } = audioBuffer;
 const worklet = new AudioWorkletNode(context, "loudness-processor", {
+  numberOfInputs: 1,
+  numberOfOutputs: 1,
+  outputChannelCount: [numberOfChannels],
   processorOptions: {
-    interval: 0.01,
-    capacity: 600
+    capacity: length / sampleRate,
+    interval: 0.1
   }
 });
 ```
