@@ -41,7 +41,13 @@ function Playground() {
       .addModule(module)
       .then(() => {
         const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
-        const worklet = new AudioWorkletNode(context, "loudness-processor");
+        const worklet = new AudioWorkletNode(context, "loudness-processor", {
+          outputChannelCount: [numberOfChannels],
+          processorOptions: {
+            capacity: length / sampleRate,
+            interval: 0.1
+          }
+        });
 
         worklet.port.onmessage = handleAudioWorkletMessage;
 
@@ -50,7 +56,7 @@ function Playground() {
 
         context.startRendering();
       })
-      .catch(setError);
+      .catch(console.log);
   });
 
   return (

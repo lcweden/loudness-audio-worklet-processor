@@ -3,7 +3,7 @@
 interface AudioWorkletProcessorOptions {
   numberOfInputs: number;
   numberOfOutputs: number;
-  outputChannelCount: number[][];
+  outputChannelCount?: number[];
   processorOptions?: { interval?: number; capacity?: number };
 }
 
