@@ -45,8 +45,6 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     super(options);
     const { numberOfInputs, numberOfOutputs, outputChannelCount, processorOptions } = options;
 
-    console.log(options);
-
     if (processorOptions) {
       const { capacity, interval } = processorOptions;
 
@@ -135,7 +133,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
 
         const energy = sumOfSquaredChannelWeightedSamples;
 
-        const previousMomentaryEnergy = this.momentaryEnergyBuffers[inputIdx].peek() || 0;
+        const previousMomentaryEnergy = this.momentaryEnergyBuffers[inputIdx].peek() ?? 0;
         const previousMomentaryEnergyForSum = this.momentaryEnergyBuffers[inputIdx].isFull()
           ? previousMomentaryEnergy
           : 0;

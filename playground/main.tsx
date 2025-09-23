@@ -56,7 +56,7 @@ function Playground() {
 
         context.startRendering();
       })
-      .catch(console.log);
+      .catch(setError);
   });
 
   return (
