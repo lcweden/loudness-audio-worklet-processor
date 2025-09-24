@@ -284,7 +284,7 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 | 1770Conf-24channels_23LKFS           | -23.0 LKFS  | 24       | :white_check_mark: |
 
 > [!TIP]
-> If decoding fails, try a different browser.
+> If decoding fails, try a different browser or check the [browser compatibility](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API#browser_compatibility)
 
 ### EBU TECH 3341 Minimum requirements test signals
 
