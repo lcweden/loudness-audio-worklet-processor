@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "demo", "playground", "vite-env.d.ts"]
+  "include": ["src", "lib", "demo", "playground", "vite-env.d.ts"]
 }
