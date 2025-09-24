@@ -54,7 +54,8 @@ function Playground() {
         source.connect(worklet).connect(context.destination);
         source.start();
 
-        context.startRendering();
+        console.time("1");
+        context.startRendering().then(() => console.timeEnd("1"));
       })
       .catch(setError);
   });
