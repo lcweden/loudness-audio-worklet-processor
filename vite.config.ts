@@ -1,10 +1,78 @@
 import tailwindcss from "@tailwindcss/vite";
 import fs from "node:fs/promises";
-import { defineConfig, Plugin, UserConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import solid from "vite-plugin-solid";
 import { author, description, license, repository, version } from "./package.json";
 
-const addBanner = (): Plugin => {
+export default defineConfig((config) => {
+  const { command, mode, isPreview } = config;
+
+  if (command === "build") {
+    if (mode === "lib") {
+      return {
+        root: "lib",
+        worker: { format: "es" },
+        build: {
+          target: "esnext",
+          lib: { entry: "index.ts", formats: ["es"], fileName: "index" },
+          outDir: "../dist",
+          emptyOutDir: true
+        },
+        base: "./"
+      };
+    }
+
+    if (mode === "static") {
+      return {
+        root: "src",
+        build: {
+          target: "esnext",
+          lib: { entry: "index.ts", formats: ["es"], fileName: "loudness.worklet" },
+          outDir: "../dist",
+          emptyOutDir: true,
+          copyPublicDir: false
+        },
+        plugins: [addBanner()]
+      };
+    }
+
+    if (mode === "demo") {
+      return {
+        plugins: [solid(), tailwindcss()],
+        root: "demo",
+        publicDir: "../public",
+        build: { outDir: "../dist", emptyOutDir: false, target: "esnext" },
+        base: "/loudness-audio-worklet-processor/"
+      };
+    }
+  }
+
+  if (command === "serve") {
+    if (mode === "demo") {
+      return {
+        plugins: [solid(), tailwindcss()],
+        root: "demo",
+        publicDir: "../public",
+        server: { host: "127.0.0.1" },
+        preview: { host: "127.0.0.1" },
+        base: isPreview ? "/loudness-audio-worklet-processor/" : "/"
+      };
+    }
+
+    if (mode === "dev") {
+      return {
+        plugins: [solid(), tailwindcss()],
+        root: "playground",
+        publicDir: "../public",
+        server: { host: "127.0.0.1" }
+      };
+    }
+  }
+
+  return {};
+});
+
+function addBanner(): Plugin {
   return {
     name: "add-banner",
     async writeBundle(options, bundle) {
@@ -35,44 +103,4 @@ const addBanner = (): Plugin => {
       }
     }
   };
-};
-
-export default defineConfig(({ mode, command, isPreview }) => {
-  if (mode === "library") {
-    return {
-      build: {
-        lib: {
-          entry: "src/index.ts",
-          formats: ["es"],
-          fileName: "loudness.worklet"
-        },
-        minify: true,
-        sourcemap: false,
-        outDir: "dist",
-        emptyOutDir: true,
-        copyPublicDir: false
-      },
-      plugins: [addBanner()]
-    };
-  }
-
-  const appConfig: UserConfig = {
-    plugins: [solid(), tailwindcss()],
-    root: mode,
-    publicDir: "../public",
-    server: { host: "127.0.0.1", open: true },
-    preview: { host: "127.0.0.1", open: true },
-    build: {
-      outDir: "../dist",
-      emptyOutDir: false
-    },
-    base:
-      command === "build"
-        ? "/loudness-audio-worklet-processor/"
-        : isPreview
-          ? "/loudness-audio-worklet-processor/"
-          : "/"
-  };
-
-  return appConfig;
-});
+}
