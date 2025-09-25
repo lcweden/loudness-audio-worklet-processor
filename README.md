@@ -53,7 +53,6 @@ This example shows the easiest way to get started with the Loudness Audio Workle
           .then(() => {
             const source = new MediaStreamAudioSourceNode(context, { mediaStream });
             const worklet = new AudioWorkletNode(context, "loudness-processor", {
-              outputChannelCount: [channelCount],
               processorOptions: {
                 interval: 0.1,
                 capacity: 600
@@ -84,9 +83,7 @@ const context = new OfflineAudioContext(numberOfChannels, length, sampleRate);
 await context.audioWorklet.addModule("loudness.worklet.js");
 
 const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
-const worklet = new AudioWorkletNode(context, "loudness-processor", {
-  outputChannelCount: [numberOfChannels]
-});
+const worklet = new AudioWorkletNode(context, "loudness-processor");
 
 worklet.port.onmessage = (event) => {
   console.log("Loudness Data:", event.data);
@@ -112,7 +109,6 @@ const { channelCount } = audioTrack.getSettings();
 
 const source = new MediaStreamAudioSourceNode(context, { mediaStream });
 const worklet = new AudioWorkletNode(context, "loudness-processor", {
-  outputChannelCount: [channelCount],
   processorOptions: {
     capacity: 600 // Seconds of history to keep, prevent memory overflow
   }
@@ -133,13 +129,13 @@ The `AudioWorkletNode` constructor accepts the following options:
 
 #### Params
 
-| Option                    | Type       | Required | Default | Description                                                                                                    |
-| ------------------------- | ---------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------- |
-| numberOfInputs            | `number`   | `N`      | `1`     | Number of input channels.                                                                                      |
-| numberOfOutputs           | `number`   | `N`      | `1`     | Number of output channels.                                                                                     |
-| outputChannelCount        | `number[]` | `N`      | `[24]`  | An array specifying the number of channels for each output. fallback to 24, provide for the best optimization. |
-| processorOptions.interval | `number`   | `N`      | `null`  | Message interval in seconds.                                                                                   |
-| processorOptions.capacity | `number`   | `N`      | `null`  | Maximum seconds of history to keep. If set to `null`, the processor will not limit the history size.           |
+| Option                    | Type       | Required | Default | Description                                                                                          |
+| ------------------------- | ---------- | -------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| numberOfInputs            | `number`   | `N`      | `1`     | Number of input channels.                                                                            |
+| numberOfOutputs           | `number`   | `N`      | `1`     | Number of output channels.                                                                           |
+| outputChannelCount        | `number[]` | `N`      | -       | Determined at runtime automatically.                                                                 |
+| processorOptions.interval | `number`   | `N`      | `null`  | Message interval in seconds.                                                                         |
+| processorOptions.capacity | `number`   | `N`      | `null`  | Maximum seconds of history to keep. If set to `null`, the processor will not limit the history size. |
 
 #### Example
 
@@ -148,7 +144,7 @@ const { numberOfChannels, length, sampleRate } = audioBuffer;
 const worklet = new AudioWorkletNode(context, "loudness-processor", {
   numberOfInputs: 1,
   numberOfOutputs: 1,
-  outputChannelCount: [numberOfChannels],
+  outputChannelCount: [numberOfChannels], // Unnecessary
   processorOptions: {
     capacity: length / sampleRate,
     interval: 0.1
@@ -284,7 +280,9 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 | 1770Conf-24channels_23LKFS           | -23.0 LKFS  | 24       | :white_check_mark: |
 
 > [!TIP]
-> If decoding fails, try a different browser.
+> If `decodeAudioData` fails, it's often due to the browser's specific support for the audio file's format (codec), container, or channel layout, rather than a general API incompatibility.
+> Try a different browser or convert the audio file to a more widely supported format.
+> For example, Chrome has limited support for certain codecs in audio files, while Safari offers broader support. (1770Conf-24channels_24LKFS)
 
 ### EBU TECH 3341 Minimum requirements test signals
 
