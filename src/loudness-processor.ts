@@ -41,9 +41,10 @@ class LoudnessProcessor extends AudioWorkletProcessor {
   shortTermLoudnessHistories: number[][] | CircularBuffer<number>[] = [];
   shortTermSampleAccumulators: number[] = [];
 
-  constructor(options: AudioWorkletProcessorOptions) {
-    super(options);
-    const { numberOfInputs, numberOfOutputs, outputChannelCount, processorOptions } = options;
+  constructor(options: AudioWorkletNodeOptions) {
+    super();
+
+    const { numberOfInputs = 1, numberOfOutputs = 1, outputChannelCount, processorOptions } = options;
 
     if (processorOptions) {
       const { capacity, interval } = processorOptions;
