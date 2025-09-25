@@ -44,8 +44,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
   constructor(options: AudioWorkletNodeOptions) {
     super();
 
-    const { numberOfInputs = 1, numberOfOutputs = 1, outputChannelCount, processorOptions } = options;
-
+    const { numberOfInputs = 1, processorOptions } = options;
     if (processorOptions) {
       const { capacity, interval } = processorOptions;
 
@@ -76,33 +75,35 @@ class LoudnessProcessor extends AudioWorkletProcessor {
         loudnessRange: Number.NEGATIVE_INFINITY
       };
     }
-
-    for (let index = 0; index < numberOfOutputs; index++) {
-      const channelCount = outputChannelCount ? outputChannelCount[index] : 24;
-
-      this.kWeightingFilters[index] = Array.from({ length: channelCount }, () => [
-        new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highshelf.a, K_WEIGHTING_COEFFICIENTS.highshelf.b),
-        new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b)
-      ]);
-
-      this.truePeakFilters[index] = Array.from({ length: channelCount }, () => [
-        new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase0),
-        new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase1),
-        new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase2),
-        new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3)
-      ]);
-    }
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
     const inputsCount = inputs.length;
 
     for (let inputIdx = 0; inputIdx < inputsCount; inputIdx++) {
+      if (!inputs[inputIdx].length) continue;
+
       const channels = inputs[inputIdx];
       const channelCount = channels.length;
       const sampleCount = channels[0].length;
       const channelWeights = Object.values(CHANNEL_WEIGHT_FACTORS[channelCount] || CHANNEL_WEIGHT_FACTORS[1]);
       const attenuation = Math.pow(10, -ATTENUATION_DB / 20);
+
+      if (!this.kWeightingFilters[inputIdx] || this.kWeightingFilters[inputIdx].length !== channelCount) {
+        this.kWeightingFilters[inputIdx] = Array.from({ length: channelCount }, () => [
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highshelf.a, K_WEIGHTING_COEFFICIENTS.highshelf.b),
+          new BiquadraticFilter(K_WEIGHTING_COEFFICIENTS.highpass.a, K_WEIGHTING_COEFFICIENTS.highpass.b)
+        ]);
+      }
+
+      if (!this.truePeakFilters[inputIdx] || this.truePeakFilters[inputIdx].length !== channelCount) {
+        this.truePeakFilters[inputIdx] = Array.from({ length: channelCount }, () => [
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase0),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase1),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase2),
+          new FiniteImpulseResponseFilter(TRUE_PEAK_COEFFICIENTS.lowpass.phase3)
+        ]);
+      }
 
       for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
         let sumOfSquaredChannelWeightedSamples = 0;
@@ -260,19 +261,26 @@ class LoudnessProcessor extends AudioWorkletProcessor {
       }
     }
 
-    for (let i = 0; i < outputs.length; i++) {
-      for (let j = 0; j < outputs[i].length; j++) {
-        outputs[i][j].set(inputs[i][j]);
-      }
-    }
+    this.#passThrough(inputs, outputs);
+    this.#postMessage();
 
+    return true;
+  }
+
+  #postMessage() {
     if (currentTime - this.lastTime >= Number(this.interval)) {
       const snapshot = { currentFrame, currentTime, currentMetrics: this.metrics };
       this.port.postMessage(snapshot);
       this.lastTime = currentTime;
     }
+  }
 
-    return true;
+  #passThrough(inputs: Float32Array[][], outputs: Float32Array[][]): void {
+    for (let i = 0; i < Math.min(inputs.length, outputs.length); i++) {
+      for (let j = 0; j < Math.min(inputs[i].length, outputs[i].length); j++) {
+        outputs[i][j].set(inputs[i][j]);
+      }
+    }
   }
 
   #energyToLoudness(energy: number): number {

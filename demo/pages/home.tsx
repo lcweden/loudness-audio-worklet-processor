@@ -9,7 +9,7 @@ function Home() {
         <div class="flex max-w-xl flex-col items-center gap-12">
           <a
             class="btn btn-ghost btn-sm rounded-full text-sm font-light shadow"
-            href="/loudness.worklet.js"
+            href="https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js"
             download="loudness.worklet.js"
           >
             Download Javascript File

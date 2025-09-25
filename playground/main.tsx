@@ -1,6 +1,6 @@
 import { createEffect, createSignal } from "solid-js";
 import { render } from "solid-js/web";
-import { AudioLoudnessSnapshot } from "../types";
+import type { AudioLoudnessSnapshot } from "../types";
 
 function Playground() {
   const [getAudioBuffer, setAudioBuffer] = createSignal<AudioBuffer>();
@@ -42,7 +42,6 @@ function Playground() {
       .then(() => {
         const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
         const worklet = new AudioWorkletNode(context, "loudness-processor", {
-          outputChannelCount: [numberOfChannels],
           processorOptions: {
             capacity: length / sampleRate,
             interval: 0.1
