@@ -1,8 +1,13 @@
 # Loudness Audio Worklet Processor
 
-A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard and implemented as an AudioWorkletProcessor, [try demo](https://lcweden.github.io/loudness-audio-worklet-processor/).
+[![npm version](https://img.shields.io/npm/v/loudness-worklet.svg)](https://www.npmjs.com/package/loudness-worklet)
+[![license](https://img.shields.io/github/license/lcweden/loudness-audio-worklet-processor.svg)](LICENSE)
+
+A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https://www.itu.int/rec/R-REC-BS.1770) standard and implemented as an AudioWorkletProcessor.
 
 [![screenshot](https://github.com/lcweden/loudness-audio-worklet-processor/blob/main/public/screenshots/meter.png)](https://lcweden.github.io/loudness-audio-worklet-processor/)
+
+<p align="center"><a href="https://lcweden.github.io/loudness-audio-worklet-processor/">Demo</a></p>
 
 ## Features
 
@@ -13,6 +18,15 @@ A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https:/
 
 ## Installation
 
+### CDN
+
+Import directly in your code:
+
+```javascript
+const module = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
+audioContext.audioWorklet.addModule(module);
+```
+
 ### Download
 
 1. Download the pre-built file: [loudness.worklet.js](https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js).
@@ -22,13 +36,36 @@ A loudness meter for the `Web Audio API`, based on the [ITU-R BS.1770-5](https:/
 audioContext.audioWorklet.addModule("loudness.worklet.js");
 ```
 
-### Import
+### NPM
 
-Import the `AudioWorkletProcessor` directly in your code:
+Install via [npm](https://www.npmjs.com/package/loudness-worklet):
+
+```bash
+npm install loudness-worklet
+```
+
+Use helper functions to create and load the worklet:
 
 ```javascript
-const module = new URL("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js");
-audioContext.audioWorklet.addModule(module);
+import { createLoudnessWorklet, LoudnessWorkletNode } from "loudness-worklet";
+
+const worklet = await createLoudnessWorklet(audioContext, {
+  processorOptions: {
+    interval: 0.1,
+    capacity: 600
+  }
+});
+
+// or
+
+await LoudnessWorkletNode.loadModule(audioContext);
+
+const worklet = new LoudnessWorkletNode(audioContext, {
+  processorOptions: {
+    interval: 0.1,
+    capacity: 600
+  }
+});
 ```
 
 ## Quick Start
@@ -41,29 +78,38 @@ This example shows the easiest way to get started with the Loudness Audio Workle
 <!doctype html>
 <html>
   <body>
+    <button>Share Screen</button>
     <pre></pre>
     <script>
+      const script = "https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js";
+      const button = document.querySelector("button");
       const pre = document.querySelector("pre");
-      navigator.mediaDevices.getDisplayMedia({ audio: true }).then((mediaStream) => {
-        const audioTrack = mediaStream.getAudioTracks()[0];
-        const { channelCount } = audioTrack.getSettings();
-        const context = new AudioContext();
-        context.audioWorklet
-          .addModule("https://lcweden.github.io/loudness-audio-worklet-processor/loudness.worklet.js")
-          .then(() => {
-            const source = new MediaStreamAudioSourceNode(context, { mediaStream });
-            const worklet = new AudioWorkletNode(context, "loudness-processor", {
-              processorOptions: {
-                interval: 0.1,
-                capacity: 600
-              }
-            });
 
-            source.connect(worklet).port.onmessage = (event) => {
-              pre.textContent = JSON.stringify(event.data, null, 2);
-            };
-          });
-      });
+      button.onclick = async () => {
+        // Get the screen stream with audio, for example a youtube tab
+        const mediaStream = await navigator.mediaDevices.getDisplayMedia({ audio: true });
+        const context = new AudioContext();
+
+        // Load the loudness worklet processor
+        await context.audioWorklet.addModule(script);
+
+        // Create the audio node from the stream
+        const source = new MediaStreamAudioSourceNode(context, { mediaStream });
+        // Create the loudness worklet node
+        const worklet = new AudioWorkletNode(context, "loudness-processor", {
+          processorOptions: {
+            interval: 0.1,
+            capacity: 600 // it means 1 minute of history can be stored
+          }
+        });
+
+        worklet.port.onmessage = (event) => {
+          pre.textContent = JSON.stringify(event.data, null, 2);
+        };
+
+        // Connect the nodes
+        source.connect(worklet);
+      };
     </script>
   </body>
 </html>
@@ -84,6 +130,17 @@ await context.audioWorklet.addModule("loudness.worklet.js");
 
 const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
 const worklet = new AudioWorkletNode(context, "loudness-processor");
+
+// Or using the helper function
+//
+// import { createLoudnessWorklet } from "loudness-worklet";
+//
+// const worklet = await createLoudnessWorklet(audioContext, {
+//   processorOptions: {
+//     interval: 0.1,
+//     capacity: 600
+//    }
+//  });
 
 worklet.port.onmessage = (event) => {
   console.log("Loudness Data:", event.data);
