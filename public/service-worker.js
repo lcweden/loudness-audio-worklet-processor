@@ -1,4 +1,4 @@
-const CACHE_NAME = "v1";
+const CACHE_NAME = "v1.4.2";
 const REQUESTS = [
   "/loudness-audio-worklet-processor/",
   "/loudness-audio-worklet-processor/index.html",
