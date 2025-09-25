@@ -1,6 +1,6 @@
 {
   "name": "loudness-worklet",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "A lightweight and efficient AudioWorklet for real-time loudness measurement in the browser, compliant with the ITU-R BS.1770-5 standard.",
   "keywords": [
     "web-audio",
