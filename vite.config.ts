@@ -8,6 +8,19 @@ export default defineConfig((config) => {
   const { command, mode, isPreview } = config;
 
   if (command === "build") {
+    if (mode === "static") {
+      return {
+        root: "src",
+        build: {
+          target: "esnext",
+          lib: { entry: "index.ts", formats: ["es"], fileName: "loudness.worklet" },
+          outDir: "../public",
+          emptyOutDir: false
+        },
+        plugins: [addBanner()]
+      };
+    }
+
     if (mode === "lib") {
       return {
         root: "lib",
@@ -22,26 +35,12 @@ export default defineConfig((config) => {
       };
     }
 
-    if (mode === "static") {
-      return {
-        root: "src",
-        build: {
-          target: "esnext",
-          lib: { entry: "index.ts", formats: ["es"], fileName: "loudness.worklet" },
-          outDir: "../dist",
-          emptyOutDir: true,
-          copyPublicDir: false
-        },
-        plugins: [addBanner()]
-      };
-    }
-
     if (mode === "demo") {
       return {
         plugins: [solid(), tailwindcss()],
         root: "demo",
         publicDir: "../public",
-        build: { outDir: "../dist", emptyOutDir: false, target: "esnext" },
+        build: { outDir: "../dist", emptyOutDir: true, target: "esnext" },
         base: "/loudness-audio-worklet-processor/"
       };
     }

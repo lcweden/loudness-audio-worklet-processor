@@ -1,5 +1,6 @@
-import module from "../src/index.ts?worker&url";
+import source from "../public/loudness.worklet.js?raw";
 
+const module = URL.createObjectURL(new Blob([source], { type: "application/javascript" }));
 const name = "loudness-processor";
 
 class LoudnessWorkletNode extends AudioWorkletNode {

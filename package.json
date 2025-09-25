@@ -17,7 +17,7 @@
   "author": "lcweden",
   "homepage": "https://lcweden.github.io/loudness-audio-worklet-processor/",
   "repository": {
-    "url": "https://github.com/lcweden/loudness-audio-worklet-processor"
+    "url": "git+https://github.com/lcweden/loudness-audio-worklet-processor.git"
   },
   "bugs": {
     "url": "https://github.com/lcweden/loudness-audio-worklet-processor/issues"
@@ -27,7 +27,8 @@
     "demo": "vite --mode demo",
     "test": "vitest",
     "build": "vite build --mode static && vite build --mode demo",
-    "lib": "vite build --mode lib && tsc -p tsconfig.lib.json",
+    "lib": "vite build --mode static && vite build --mode lib && tsc -p tsconfig.lib.json",
+    "prepare": "npm run lib",
     "preview": "vite preview --mode demo",
     "format": "prettier --write ."
   },
