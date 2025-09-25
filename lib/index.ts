@@ -16,7 +16,7 @@ class LoudnessWorkletNode extends AudioWorkletNode {
 async function createLoudnessWorklet(
   context: BaseAudioContext,
   options?: AudioWorkletNodeOptions
-): Promise<LoudnessWorkletNode> {
+): Promise<AudioWorkletNode> {
   await context.audioWorklet.addModule(module);
   return new AudioWorkletNode(context, name, options);
 }
