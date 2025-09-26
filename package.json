@@ -37,7 +37,8 @@
   "author": "lcweden",
   "homepage": "https://lcweden.github.io/loudness-audio-worklet-processor/",
   "repository": {
-    "url": "git+https://github.com/lcweden/loudness-audio-worklet-processor.git"
+    "type": "git",
+    "url": "https://github.com/lcweden/loudness-audio-worklet-processor.git"
   },
   "bugs": {
     "url": "https://github.com/lcweden/loudness-audio-worklet-processor/issues"
