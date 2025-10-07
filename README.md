@@ -139,8 +139,8 @@ This example shows the easiest way to get started with the Loudness Audio Workle
         const worklet = new AudioWorkletNode(context, "loudness-processor", {
           processorOptions: {
             interval: 0.1, // every 0.1s a message will be sent
-            capacity: 600, // 1 minute of history can be stored
-          },
+            capacity: 600 // 1 minute of history can be stored
+          }
         });
 
         worklet.port.onmessage = (event) => {
@@ -196,7 +196,7 @@ const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 const context = new AudioContext({ sampleRate: 48000 });
 const source = context.createMediaStreamSource(mediaStream);
 const worklet = await createLoudnessWorklet(context, {
-  processorOptions: { interval: 1, capacity: 600 },
+  processorOptions: { interval: 1, capacity: 600 }
 });
 
 worklet.port.onmessage = (event) => console.log("Loudness Data:", event.data);
@@ -230,12 +230,12 @@ Most of the time, you only need to set `processorOptions`.
 const { numberOfChannels, length, sampleRate } = audioBuffer;
 const worklet = new AudioWorkletNode(context, "loudness-processor", {
   numberOfInputs: 1,
-  numberOfOutputs: 1, 
+  numberOfOutputs: 1,
   outputChannelCount: [numberOfChannels], // Unnecessary
   processorOptions: {
     capacity: length / sampleRate,
-    interval: 0.1,
-  },
+    interval: 0.1
+  }
 });
 ```
 
@@ -286,7 +286,7 @@ The following coefficients are used for the K-weighting filter:
 
 |     | highshelf         | highpass          |
 | --- | ----------------- | ----------------- |
-| a1  | -1.69065929318241 | âˆ’1.99004745483398 |
+| a1  | -1.69065929318241 | −1.99004745483398 |
 | a2  | 0.73248077421585  | 0.99007225036621  |
 | b0  | 1.53512485958697  | 1.0               |
 | b1  | -2.69169618940638 | -2.0              |
@@ -296,18 +296,18 @@ The following FIR filter coefficients are used for true-peak measurement:
 
 | Phase 0          | Phase 1          | Phase 2          | Phase 3          |
 | ---------------- | ---------------- | ---------------- | ---------------- |
-| 0.0017089843750  | âˆ’0.0291748046875 | âˆ’0.0189208984375 | âˆ’0.0083007812500 |
+| 0.0017089843750  | −0.0291748046875 | −0.0189208984375 | −0.0083007812500 |
 | 0.0109863281250  | 0.0292968750000  | 0.0330810546875  | 0.0148925781250  |
-| âˆ’0.0196533203125 | âˆ’0.0517578125000 | âˆ’0.0582275390625 | âˆ’0.0266113281250 |
+| −0.0196533203125 | −0.0517578125000 | −0.0582275390625 | −0.0266113281250 |
 | 0.0332031250000  | 0.0891113281250  | 0.1015625000000  | 0.0476074218750  |
-| âˆ’0.0594482421875 | âˆ’0.1665039062500 | âˆ’0.2003173828125 | âˆ’0.1022949218750 |
+| −0.0594482421875 | −0.1665039062500 | −0.2003173828125 | −0.1022949218750 |
 | 0.1373291015625  | 0.4650878906250  | 0.7797851562500  | 0.9721679687500  |
 | 0.9721679687500  | 0.7797851562500  | 0.4650878906250  | 0.1373291015625  |
-| âˆ’0.1022949218750 | âˆ’0.2003173828125 | âˆ’0.1665039062500 | âˆ’0.0594482421875 |
+| −0.1022949218750 | −0.2003173828125 | −0.1665039062500 | −0.0594482421875 |
 | 0.0476074218750  | 0.1015625000000  | 0.0891113281250  | 0.0332031250000  |
-| âˆ’0.0266113281250 | âˆ’0.0582275390625 | âˆ’0.0517578125000 | âˆ’0.0196533203125 |
+| −0.0266113281250 | −0.0582275390625 | −0.0517578125000 | −0.0196533203125 |
 | 0.0148925781250  | 0.0330810546875  | 0.0292968750000  | 0.0109863281250  |
-| âˆ’0.0083007812500 | âˆ’0.0189208984375 | âˆ’0.0291748046875 | 0.0017089843750  |
+| −0.0083007812500 | −0.0189208984375 | −0.0291748046875 | 0.0017089843750  |
 
 ## Validation
 
@@ -377,29 +377,29 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 
 | file                                 | expected response and accepted tolerances                   |                    |
 | ------------------------------------ | ----------------------------------------------------------- | ------------------ |
-| seq-3341-1-16bit                     | M, S, I = âˆ’23.0 Â±0.1 LUFS                                   | :white_check_mark: |
-| seq-3341-2-16bit                     | M, S, I = âˆ’33.0 Â±0.1 LUFS                                   | :white_check_mark: |
-| seq-3341-3-16bit-v02                 | I = âˆ’23.0 Â±0.1 LUFS                                         | :white_check_mark: |
-| seq-3341-4-16bit-v02                 | I = âˆ’23.0 Â±0.1 LUFS                                         | :white_check_mark: |
-| seq-3341-5-16bit-v02                 | I = âˆ’23.0 Â±0.1 LUFS                                         | :white_check_mark: |
-| seq-3341-6-6channels-WAVEEX-16bit    | I = âˆ’23.0 Â±0.1 LUFS                                         | :white_check_mark: |
-| seq-3341-7_seq-3342-5-24bit          | I = âˆ’23.0 Â±0.1 LUFS                                         | :white_check_mark: |
-| seq-3341-2011-8_seq-3342-6-24bit-v02 | I = âˆ’23.0 Â±0.1 LUFS                                         | :white_check_mark: |
-| seq-3341-9-24bit                     | S = âˆ’23.0 Â±0.1 LUFS, constant after 3 s                     | :white_check_mark: |
-| seq-3341-10-\*-24bit                 | Max S = âˆ’23.0 Â±0.1 LUFS, for each segment                   | :white_check_mark: |
-| seq-3341-11-24bit                    | Max S = âˆ’38.0, âˆ’37.0, â€¦, âˆ’19.0 Â±0.1 LUFS, successive values | :white_check_mark: |
-| seq-3341-12-24bit                    | M = âˆ’23.0 Â±0.1 LUFS, constant after 1 s                     | :white_check_mark: |
-| seq-3341-13-\*-24bit                 | Max M = âˆ’23.0 Â±0.1 LUFS, for each segment                   | :white_check_mark: |
-| seq-3341-14-24bit                    | Max M = âˆ’38.0, â€¦, âˆ’19.0 Â±0.1 LUFS, successive values        | :white_check_mark: |
-| seq-3341-15-24bit                    | Max true-peak = âˆ’6.0 +0.2/âˆ’0.4 dBTP                         | :white_check_mark: |
-| seq-3341-16-24bit                    | Max true-peak = âˆ’6.0 +0.2/âˆ’0.4 dBTP                         | :white_check_mark: |
-| seq-3341-17-24bit                    | Max true-peak = âˆ’6.0 +0.2/âˆ’0.4 dBTP                         | :white_check_mark: |
-| seq-3341-18-24bit                    | Max true-peak = âˆ’6.0 +0.2/âˆ’0.4 dBTP                         | :white_check_mark: |
-| seq-3341-19-24bit                    | Max true-peak = +3.0 +0.2/âˆ’0.4 dBTP                         | :white_check_mark: |
-| seq-3341-20-24bit                    | Max true-peak = 0.0 +0.2/âˆ’0.4 dBTP                          | :white_check_mark: |
-| seq-3341-21-24bit                    | Max true-peak = 0.0 +0.2/âˆ’0.4 dBTP                          | :white_check_mark: |
-| seq-3341-22-24bit                    | Max true-peak = 0.0 +0.2/âˆ’0.4 dBTP                          | :white_check_mark: |
-| seq-3341-23-24bit                    | Max true-peak = 0.0 +0.2/âˆ’0.4 dBTP                          | :white_check_mark: |
+| seq-3341-1-16bit                     | M, S, I = −23.0 ±0.1 LUFS                                   | :white_check_mark: |
+| seq-3341-2-16bit                     | M, S, I = −33.0 ±0.1 LUFS                                   | :white_check_mark: |
+| seq-3341-3-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-4-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-5-16bit-v02                 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-6-6channels-WAVEEX-16bit    | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-7_seq-3342-5-24bit          | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-2011-8_seq-3342-6-24bit-v02 | I = −23.0 ±0.1 LUFS                                         | :white_check_mark: |
+| seq-3341-9-24bit                     | S = −23.0 ±0.1 LUFS, constant after 3 s                     | :white_check_mark: |
+| seq-3341-10-\*-24bit                 | Max S = −23.0 ±0.1 LUFS, for each segment                   | :white_check_mark: |
+| seq-3341-11-24bit                    | Max S = −38.0, −37.0, …, −19.0 ±0.1 LUFS, successive values | :white_check_mark: |
+| seq-3341-12-24bit                    | M = −23.0 ±0.1 LUFS, constant after 1 s                     | :white_check_mark: |
+| seq-3341-13-\*-24bit                 | Max M = −23.0 ±0.1 LUFS, for each segment                   | :white_check_mark: |
+| seq-3341-14-24bit                    | Max M = −38.0, …, −19.0 ±0.1 LUFS, successive values        | :white_check_mark: |
+| seq-3341-15-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-16-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-17-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-18-24bit                    | Max true-peak = −6.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-19-24bit                    | Max true-peak = +3.0 +0.2/−0.4 dBTP                         | :white_check_mark: |
+| seq-3341-20-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
+| seq-3341-21-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
+| seq-3341-22-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
+| seq-3341-23-24bit                    | Max true-peak = 0.0 +0.2/−0.4 dBTP                          | :white_check_mark: |
 
 ### EBU TECH 3342 Minimum requirements test signals
 
@@ -407,12 +407,12 @@ meets the specifications within Recommendation [ITU-R BS.1770](https://www.itu.i
 
 | file                                 | expected response and accepted tolerances |                    |
 | ------------------------------------ | ----------------------------------------- | ------------------ |
-| seq-3342-1-16bit                     | LRA = 10 Â±1 LU                            | :white_check_mark: |
-| seq-3342-2-16bit                     | LRA = 5 Â±1 LU                             | :white_check_mark: |
-| seq-3342-3-16bit                     | LRA = 20 Â±1 LU                            | :white_check_mark: |
-| seq-3342-4-16bit                     | LRA = 15 Â±1 LU                            | :white_check_mark: |
-| seq-3341-7_seq-3342-5-24bit          | LRA = 5 Â±1 LU                             | :white_check_mark: |
-| seq-3341-2011-8_seq-3342-6-24bit-v02 | LRA = 15 Â±1 LU                            | :white_check_mark: |
+| seq-3342-1-16bit                     | LRA = 10 ±1 LU                            | :white_check_mark: |
+| seq-3342-2-16bit                     | LRA = 5 ±1 LU                             | :white_check_mark: |
+| seq-3342-3-16bit                     | LRA = 20 ±1 LU                            | :white_check_mark: |
+| seq-3342-4-16bit                     | LRA = 15 ±1 LU                            | :white_check_mark: |
+| seq-3341-7_seq-3342-5-24bit          | LRA = 5 ±1 LU                             | :white_check_mark: |
+| seq-3341-2011-8_seq-3342-6-24bit-v02 | LRA = 15 ±1 LU                            | :white_check_mark: |
 
 ## Acknowledgments
 
