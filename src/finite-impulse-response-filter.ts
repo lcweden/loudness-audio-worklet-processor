@@ -5,12 +5,26 @@ class FiniteImpulseResponseFilter {
   #coefficients: number[];
   #buffer: number[];
 
+  /**
+   * Creates an instance of the filter.
+   * @param coefficients - The filter coefficients.
+   */
   constructor(coefficients: number[]) {
     this.#coefficients = coefficients;
     this.#buffer = Array(coefficients.length).fill(0);
   }
 
+  /**
+   * Processes a single input sample.
+   * @param {number} input - The input sample.
+   * @returns {number} - The filtered output sample.
+   */
   process(input: number): number;
+  /**
+   * Processes multiple input samples.
+   * @param {number[]} inputs - The input samples.
+   * @returns {number[]} - The filtered output samples.
+   */
   process(inputs: number[]): number[];
   process(i: number | number[]): number | number[] {
     if (Array.isArray(i)) {
@@ -33,6 +47,10 @@ class FiniteImpulseResponseFilter {
     }
   }
 
+  /**
+   * Resets the filter state.
+   * @returns { void }
+   */
   reset(): void {
     this.#buffer.fill(0);
   }
