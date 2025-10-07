@@ -47,17 +47,6 @@ export default defineConfig((config) => {
   }
 
   if (command === "serve") {
-    if (mode === "demo") {
-      return {
-        plugins: [solid(), tailwindcss()],
-        root: "demo",
-        publicDir: "../public",
-        server: { host: "127.0.0.1" },
-        preview: { host: "127.0.0.1" },
-        base: isPreview ? "/loudness-audio-worklet-processor/" : "/"
-      };
-    }
-
     if (mode === "dev") {
       return {
         plugins: [solid(), tailwindcss()],
@@ -65,6 +54,23 @@ export default defineConfig((config) => {
         publicDir: "../public",
         server: { host: "127.0.0.1" }
       };
+    }
+
+    if (mode === "demo") {
+      if (isPreview) {
+        return {
+          preview: { host: "127.0.0.1" },
+          base: "/loudness-audio-worklet-processor/"
+        };
+      } else {
+        return {
+          plugins: [solid(), tailwindcss()],
+          root: "demo",
+          publicDir: "../public",
+          server: { host: "127.0.0.1" },
+          base: "/"
+        };
+      }
     }
   }
 
