@@ -43,6 +43,7 @@ class BiquadraticFilter {
    * Sets new filter coefficients.
    * @param { number[] } a - Feedback coefficients [a1, a2]
    * @param { number[] } b - Feedforward coefficients [b0, b1, b2]
+   * @returns { void }
    */
   set(a: number[], b: number[]): void {
     this.#a.set(((a.length = 2), a));
@@ -51,6 +52,7 @@ class BiquadraticFilter {
 
   /**
    * Resets the filter state.
+   * @returns { void }
    */
   reset(): void {
     this.#x.fill(0);
